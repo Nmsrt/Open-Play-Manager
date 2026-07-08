@@ -2,9 +2,11 @@ import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
+import { useAdminTheme } from '@/lib/useAdminTheme';
 
 export default function AdminLayout() {
   const navigate = useNavigate();
+  useAdminTheme();
 
   async function signOut() {
     await supabase.auth.signOut();

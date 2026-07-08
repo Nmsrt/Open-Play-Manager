@@ -37,6 +37,28 @@ body {
   color: #14261a;
 }
 
+/* Admin surface: light-black (not pure #000) dark theme, toggled on <html>
+   by AdminLayout/AdminLogin so it also covers Radix portals (dialogs render
+   into document.body, which is still a descendant of html.admin-theme). */
+.admin-theme {
+  --color-background: #1c1d1f;
+  --color-surface: #26272a;
+  --color-foreground: #f2f3f1;
+  --color-muted: #303134;
+  --color-muted-foreground: #a3a7ac;
+  --color-border: #3a3b3f;
+  --color-primary: #22c55e;
+  --color-primary-deep: #16a34a;
+  --color-primary-foreground: #0b1f13;
+  --color-accent: #bef264;
+  --color-destructive: #f87171;
+  --color-destructive-foreground: #1c1d1f;
+}
+
+.admin-theme body {
+  background-image: none;
+}
+
 /* Jersey-style headline utility: condensed, tall, uppercase. */
 .headline {
   font-family: var(--font-display);

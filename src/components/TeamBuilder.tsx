@@ -167,7 +167,7 @@ function Column({
       className={cn(
         'relative flex min-h-[240px] flex-col overflow-hidden rounded-lg p-3 transition-all',
         variant === 'team' &&
-          'border border-border border-t-4 shadow-sm [background:repeating-linear-gradient(0deg,#f1f7f2_0_28px,#e9f2ea_28px_56px)]',
+          'border border-border border-t-4 shadow-sm [background:repeating-linear-gradient(0deg,#1f3b28_0_28px,#213f2b_28px_56px)]',
         variant === 'team' && !accent && 'border-t-border',
         variant === 'pool' && 'border-2 border-dashed border-border bg-muted/50',
         isOver && 'scale-[1.01] border-primary shadow-md',

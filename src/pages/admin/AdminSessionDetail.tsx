@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, CalendarDays, MapPin, Users } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { Session, Team, TeamAssignment } from '@/lib/types';
-import { formatDate } from '@/lib/utils';
+import { cn, locationCover } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PlayersTab, { type PlayerWithPayments } from '@/components/PlayersTab';
 import TeamsManager from '@/components/TeamsManager';
 import TeamBuilder from '@/components/TeamBuilder';
+import SessionDateTime from '@/components/SessionDateTime';
 
 export default function AdminSessionDetail() {
   const { id } = useParams<{ id: string }>();
@@ -56,6 +57,7 @@ export default function AdminSessionDetail() {
 
   const registered = players.filter((p) => p.status === 'registered');
   const waitlisted = players.filter((p) => p.status === 'waitlisted');
+  const cover = locationCover(session.location);
 
   return (
     <div>
@@ -66,16 +68,41 @@ export default function AdminSessionDetail() {
         <ArrowLeft className="h-4 w-4" /> All sessions
       </Link>
 
-      <div className="mb-6 flex flex-wrap items-center gap-3">
-        <h1 className="headline text-3xl">{session.title}</h1>
-        <Badge variant={session.status === 'open' ? 'success' : 'secondary'}>{session.status}</Badge>
-        {session.teams_published && <Badge variant="outline">teams live</Badge>}
-        <p className="w-full text-sm text-muted-foreground">
-          {formatDate(session.date)} · {session.location} · {session.format} ·{' '}
-          {session.registered_count}/{session.max_players} registered
-          {waitlisted.length > 0 && ` · ${waitlisted.length} waitlisted`}
-        </p>
-      </div>
+      {/* Venue photo as a cover when we have one for this location; a dark
+          scrim keeps the details legible over it either way. */}
+      <section className="relative mb-6 overflow-hidden rounded-lg bg-muted shadow-sm">
+        {cover && (
+          <>
+            <img src={cover} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/60 to-black/30" />
+          </>
+        )}
+        <div className="relative p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <h1 className="headline text-3xl leading-tight">{session.title}</h1>
+            <div className="flex shrink-0 gap-1.5">
+              <Badge variant={session.status === 'open' ? 'success' : 'secondary'}>{session.status}</Badge>
+              {session.teams_published && <Badge variant="outline">teams live</Badge>}
+            </div>
+          </div>
+
+          <div className={cn('mt-3 space-y-1.5 text-sm', cover ? 'text-white/90' : 'text-muted-foreground')}>
+            <p className="flex items-center gap-2">
+              <CalendarDays className={cn('h-4 w-4 shrink-0', cover ? 'text-accent' : 'text-primary')} />
+              <SessionDateTime iso={session.date} dividerClassName={cover ? 'text-accent' : undefined} />
+            </p>
+            <p className="flex items-center gap-2">
+              <MapPin className={cn('h-4 w-4 shrink-0', cover ? 'text-accent' : 'text-primary')} />
+              {session.location}
+            </p>
+            <p className="flex items-center gap-2">
+              <Users className={cn('h-4 w-4 shrink-0', cover ? 'text-accent' : 'text-primary')} />
+              {session.format} · {session.registered_count}/{session.max_players} registered
+              {waitlisted.length > 0 && ` · ${waitlisted.length} waitlisted`}
+            </p>
+          </div>
+        </div>
+      </section>
 
       <Tabs defaultValue="players">
         <TabsList>
