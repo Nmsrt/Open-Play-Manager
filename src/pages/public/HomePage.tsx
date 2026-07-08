@@ -30,7 +30,7 @@ export default function HomePage() {
     <main className="mx-auto max-w-2xl px-4 pb-16">
       {/* Hero — matchday-programme masthead with a faint centre circle,
           set on a translucent card so it stays legible over the photo. */}
-      <header className="relative mt-6 overflow-hidden rounded-xl border border-border bg-surface/90 py-14 text-center shadow-sm backdrop-blur-sm">
+      <header className="relative mt-6 mb-8 overflow-hidden rounded-xl border border-border bg-surface/90 py-14 text-center shadow-sm backdrop-blur-sm">
         <div
           aria-hidden
           className="pointer-events-none absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary/10"
@@ -50,7 +50,7 @@ export default function HomePage() {
         </p>
       </header>
 
-      {loading && <p className="text-center text-muted-foreground">Loading sessions…</p>}
+      {loading && <p className="py-6 text-center text-muted-foreground">Loading sessions…</p>}
 
       {!loading && open.length === 0 && (
         <div className="rounded-lg border border-dashed border-border bg-surface/60 py-12 text-center text-muted-foreground">
@@ -58,7 +58,7 @@ export default function HomePage() {
         </div>
       )}
 
-      <div className="space-y-4">
+      <div className="space-y-5">
         {open.map((s) => {
           const slotsLeft = Math.max(0, s.max_players - s.registered_count);
           return (
