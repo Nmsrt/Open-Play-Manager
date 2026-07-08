@@ -80,9 +80,21 @@ export default function AdminSessionDetail() {
         <div className="relative p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <h1 className="headline text-3xl leading-tight">{session.title}</h1>
-            <div className="flex shrink-0 gap-1.5">
+            <div className="flex shrink-0 items-center gap-2">
               <Badge variant={session.status === 'open' ? 'success' : 'secondary'}>{session.status}</Badge>
-              {session.teams_published && <Badge variant="outline">teams live</Badge>}
+              <span
+                className="inline-flex items-center gap-1.5 text-xs text-white/80"
+                title={session.teams_published ? 'Teams published' : 'Teams not published'}
+              >
+                <span
+                  aria-hidden
+                  className={cn(
+                    'h-2 w-2 rounded-full',
+                    session.teams_published ? 'bg-green-500' : 'bg-red-500',
+                  )}
+                />
+                Teams {session.teams_published ? 'live' : 'not live'}
+              </span>
             </div>
           </div>
 
