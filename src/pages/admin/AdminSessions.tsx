@@ -88,6 +88,7 @@ export default function AdminSessions() {
               <TableHead>Format</TableHead>
               <TableHead>Players</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Teams</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -118,22 +119,22 @@ export default function AdminSessions() {
                     {s.registered_count}/{s.max_players}
                   </TableCell>
                   <TableCell>
-                    <div className="flex flex-col items-start gap-1.5">
-                      <Badge variant={statusVariant[s.status]}>{s.status}</Badge>
+                    <Badge variant={statusVariant[s.status]}>{s.status}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <span
+                      className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"
+                      title={s.teams_published ? 'Teams published' : 'Teams not published'}
+                    >
                       <span
-                        className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"
-                        title={s.teams_published ? 'Teams published' : 'Teams not published'}
-                      >
-                        <span
-                          aria-hidden
-                          className={cn(
-                            'h-2 w-2 rounded-full',
-                            s.teams_published ? 'bg-green-500' : 'bg-red-500',
-                          )}
-                        />
-                        Teams {s.teams_published ? 'live' : 'not live'}
-                      </span>
-                    </div>
+                        aria-hidden
+                        className={cn(
+                          'h-2 w-2 rounded-full',
+                          s.teams_published ? 'bg-green-500' : 'bg-red-500',
+                        )}
+                      />
+                      {s.teams_published ? 'Live' : 'Not live'}
+                    </span>
                   </TableCell>
                   <TableCell className="space-x-1 whitespace-nowrap text-right">
                     {nextActions[s.status].map((a) => (
