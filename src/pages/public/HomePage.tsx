@@ -39,15 +39,13 @@ export default function HomePage() {
           aria-hidden
           className="pointer-events-none absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary/20"
         />
-        <p className="headline text-sm tracking-[0.3em] text-primary drop-shadow-[0_1px_2px_rgba(255,255,255,0.8)]">
-          ⚽ OpenPlay
-        </p>
-        <h1 className="headline mt-2 text-5xl leading-none drop-shadow-[0_2px_4px_rgba(255,255,255,0.8)] sm:text-6xl">
+        <p className="text-halo headline text-sm tracking-[0.3em] text-primary-deep">⚽ OpenPlay</p>
+        <h1 className="text-halo headline mt-2 text-5xl leading-none text-foreground sm:text-6xl">
           Football
           <br />
-          <span className="text-primary">Open Play</span>
+          <span className="text-primary-deep">Open Play</span>
         </h1>
-        <p className="mx-auto mt-4 max-w-sm text-muted-foreground drop-shadow-[0_1px_2px_rgba(255,255,255,0.8)]">
+        <p className="text-halo mx-auto mt-4 max-w-sm font-medium text-foreground/80">
           Pick a session. Claim your slot. Pay, show up, play.
         </p>
       </header>
