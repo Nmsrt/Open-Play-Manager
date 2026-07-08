@@ -4,7 +4,7 @@ import { ArrowLeft, CalendarDays, CheckCircle2, MapPin, Shirt, Users } from 'luc
 import { supabase } from '@/lib/supabase';
 import type { Session, PlayerStatus } from '@/lib/types';
 import type { RegistrationInput } from '@/lib/validation';
-import { formatDate } from '@/lib/utils';
+import { formatDate, locationCover } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import RegistrationForm from '@/components/RegistrationForm';
@@ -72,6 +72,7 @@ export default function SessionPage() {
   const slotsLeft = Math.max(0, session.max_players - session.registered_count);
   const isFull = slotsLeft === 0;
   const isOpen = session.status === 'open';
+  const cover = locationCover(session.location);
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">
@@ -82,8 +83,21 @@ export default function SessionPage() {
         <ArrowLeft className="h-4 w-4" /> All sessions
       </Link>
 
-      {/* Match header — dark pitch panel, scoreboard energy. */}
+      {/* Match header — dark pitch panel, scoreboard energy. Venue photo as
+          cover when we have one for this location (e.g. Parqal). */}
       <section className="relative mb-6 overflow-hidden rounded-lg bg-primary-deep text-white shadow-lg">
+        {cover && (
+          <>
+            <img
+              src={cover}
+              alt=""
+              aria-hidden
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            {/* Dark scrim keeps text readable over the photo. */}
+            <div className="absolute inset-0 bg-gradient-to-t from-green-950/95 via-green-950/75 to-green-900/45" />
+          </>
+        )}
         <div
           aria-hidden
           className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full border-2 border-white/10"
@@ -92,7 +106,7 @@ export default function SessionPage() {
           aria-hidden
           className="pointer-events-none absolute -right-16 -top-16 h-32 w-32 rounded-full border-2 border-white/10"
         />
-        <div className="p-6">
+        <div className="relative p-6">
           <div className="flex items-start justify-between gap-3">
             <h1 className="headline text-4xl leading-none">{session.title}</h1>
             <Badge
