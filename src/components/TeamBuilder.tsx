@@ -11,9 +11,9 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { AlertTriangle, Eye, EyeOff, Printer, Shuffle, Save, Trash2 } from 'lucide-react';
+import { AlertTriangle, Eye, EyeOff, Printer, Save, Trash2, Wand2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import type { Player, Position, Session, Team, TeamAssignment } from '@/lib/types';
+import type { Player, Position, Session, SkillLevel, Team, TeamAssignment } from '@/lib/types';
 import { bibColor, cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +22,45 @@ type Placement = Record<string, string | null>; // playerId -> teamId | null (po
 type Source = Record<string, 'admin' | 'self'>;
 
 const POSITION_ORDER: Position[] = ['GK', 'DEF', 'MID', 'FWD', 'ANY'];
+
+const SKILL_VALUE: Record<SkillLevel, number> = { beginner: 1, intermediate: 2, advanced: 3 };
+function skillValue(level: SkillLevel | null): number {
+  return level ? SKILL_VALUE[level] : 2; // unknown skill treated as neutral/average
+}
+
+// Scans free-text "squad requests" for other registered players' first names
+// so the auto-distributor can try to seat requested teammates together.
+// Deliberately simple (substring match, no external calls) — a lightweight
+// heuristic, not a guarantee, same spirit as the rest of the balancer.
+function buildTeammateLinks(players: Player[]): Map<string, Set<string>> {
+  const links = new Map<string, Set<string>>();
+  const link = (a: string, b: string) => {
+    if (!links.has(a)) links.set(a, new Set());
+    links.get(a)!.add(b);
+  };
+  for (const a of players) {
+    if (!a.teammate_requests) continue;
+    const text = a.teammate_requests.toLowerCase();
+    for (const b of players) {
+      if (b.id === a.id) continue;
+      const firstName = b.full_name.trim().split(/\s+/)[0]?.toLowerCase();
+      if (firstName && firstName.length >= 3 && text.includes(firstName)) {
+        link(a.id, b.id);
+        link(b.id, a.id);
+      }
+    }
+  }
+  return links;
+}
+
+// Penalize stacking the same position onto one team — hard-ish for
+// goalkeepers (rarely want two), softer for outfield positions.
+function positionPenalty(player: Player, teamMembers: Player[]): number {
+  if (player.preferred_position === 'ANY') return 0;
+  const sameCount = teamMembers.filter((m) => m.preferred_position === player.preferred_position).length;
+  if (sameCount === 0) return 0;
+  return player.preferred_position === 'GK' ? 200 : sameCount * 25;
+}
 
 interface Props {
   session: Session;
@@ -264,6 +303,10 @@ export default function TeamBuilder({ session, teams, players, assignments, onSa
     setDirty(true);
   }
 
+  // Auto-distributes the unassigned pool with a weighted scoring pass rather
+  // than pure round-robin: squad requests get seated together first, then
+  // it balances position stacking, skill level, and team size, in that
+  // priority order.
   function shuffleEvenly() {
     if (teams.length === 0) return;
     const next: Placement = { ...placement };
@@ -273,22 +316,43 @@ export default function TeamBuilder({ session, teams, players, assignments, onSa
       loads.set(t.id, players.filter((p) => next[p.id] === t.id));
     }
     const pool = players.filter((p) => !next[p.id]);
-    // GKs first (one per keeperless team), then outfield by position, always
-    // into the least-loaded team — not pure random.
-    const ordered = [...pool].sort(
-      (a, b) =>
-        POSITION_ORDER.indexOf(a.preferred_position) - POSITION_ORDER.indexOf(b.preferred_position),
-    );
+    if (pool.length === 0) return;
+
+    const links = buildTeammateLinks(players);
+    const globalAvgSkill =
+      players.reduce((sum, p) => sum + skillValue(p.skill_level), 0) / Math.max(1, players.length);
+
+    // Seat players with the most squad-request connections first so their
+    // requested teammates still have room; GK/position/skill break ties.
+    const ordered = [...pool].sort((a, b) => {
+      const linkDiff = (links.get(b.id)?.size ?? 0) - (links.get(a.id)?.size ?? 0);
+      if (linkDiff !== 0) return linkDiff;
+      const posDiff = POSITION_ORDER.indexOf(a.preferred_position) - POSITION_ORDER.indexOf(b.preferred_position);
+      if (posDiff !== 0) return posDiff;
+      return skillValue(b.skill_level) - skillValue(a.skill_level);
+    });
+
     for (const player of ordered) {
-      const candidates = [...loads.entries()].sort((a, b) => a[1].length - b[1].length);
-      let targetId = candidates[0][0];
-      if (player.preferred_position === 'GK') {
-        const keeperless = candidates.find(([, list]) => !list.some((p) => p.preferred_position === 'GK'));
-        if (keeperless) targetId = keeperless[0];
+      let bestTeamId = teams[0].id;
+      let bestScore = -Infinity;
+      for (const t of teams) {
+        const members = loads.get(t.id)!;
+        const requested = links.get(player.id);
+        const linkBonus = requested
+          ? members.reduce((sum, m) => sum + (requested.has(m.id) ? 1 : 0), 0) * 1000
+          : 0;
+        const skillSum = members.reduce((sum, m) => sum + skillValue(m.skill_level), 0);
+        const projectedAvg = (skillSum + skillValue(player.skill_level)) / (members.length + 1);
+        const skillPenalty = Math.abs(projectedAvg - globalAvgSkill) * 40;
+        const score = linkBonus - positionPenalty(player, members) - skillPenalty - members.length * 50;
+        if (score > bestScore) {
+          bestScore = score;
+          bestTeamId = t.id;
+        }
       }
-      next[player.id] = targetId;
+      next[player.id] = bestTeamId;
       nextSource[player.id] = 'admin';
-      loads.get(targetId)!.push(player);
+      loads.get(bestTeamId)!.push(player);
     }
     setPlacement(next);
     setSource(nextSource);
@@ -389,9 +453,14 @@ export default function TeamBuilder({ session, teams, players, assignments, onSa
             Drag players from Unassigned onto a team, or auto-fill the pool below.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={shuffleEvenly}>
-          <Shuffle className="h-4 w-4" /> Distribute pool evenly
-        </Button>
+        <div className="text-right">
+          <Button variant="outline" size="sm" onClick={shuffleEvenly}>
+            <Wand2 className="h-4 w-4" /> Auto-fill pool
+          </Button>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Balances skill &amp; position, keeps squad requests together
+          </p>
+        </div>
       </div>
 
       {imbalanced && (
