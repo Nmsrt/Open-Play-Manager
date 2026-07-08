@@ -194,7 +194,7 @@ function Column({
         ))}
         {variant === 'pool' && count === 0 && (
           <p className="py-6 text-center text-xs text-muted-foreground">
-            Bench is empty — everyone's on a pitch 🎉
+            No unassigned players
           </p>
         )}
       </div>
@@ -386,7 +386,7 @@ export default function TeamBuilder({ session, teams, players, assignments, onSa
         <div>
           <h3 className="headline text-lg">Build lineups</h3>
           <p className="text-xs text-muted-foreground">
-            Drag players from the Dugout onto a team, or auto-fill the pool below.
+            Drag players from Unassigned onto a team, or auto-fill the pool below.
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={shuffleEvenly}>
@@ -408,10 +408,9 @@ export default function TeamBuilder({ session, teams, players, assignments, onSa
         >
           <Column
             id="pool"
-            title="🪑 Dugout"
+            title="Unassigned"
             variant="pool"
             count={(byTeam.get(null) ?? []).length}
-            subtitle="Drag players onto a pitch"
           >
             {(byTeam.get(null) ?? []).map((p) => (
               <PlayerCard key={p.id} player={p} jersey={jerseys[p.id] ?? null} onJersey={() => editJersey(p)} />
