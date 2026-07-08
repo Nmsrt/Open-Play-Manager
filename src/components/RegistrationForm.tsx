@@ -333,7 +333,7 @@ export default function RegistrationForm({ session, isFull, onSuccess }: Props) 
           </div>
         </div>
         <p className="mt-4 border-t border-dashed border-border pt-3 text-xs text-muted-foreground">
-          ⚠️ Your position isn't guaranteed — it depends on what everyone else picks too. The
+          Your position isn't guaranteed — it depends on what everyone else picks too. The
           organizers will do their best to balance the teams.
         </p>
       </div>
