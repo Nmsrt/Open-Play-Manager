@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, CalendarDays, CheckCircle2, MapPin, Users } from 'lucide-react';
+import { ArrowLeft, CalendarDays, CheckCircle2, MapPin, Shirt, Users } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import type { Session, Team, TeamPreferenceCount, PlayerStatus } from '@/lib/types';
+import type { Session, PlayerStatus } from '@/lib/types';
 import type { RegistrationInput } from '@/lib/validation';
 import { formatDate } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -14,19 +14,8 @@ type Registered = { status: PlayerStatus; values: RegistrationInput };
 export default function SessionPage() {
   const { id } = useParams<{ id: string }>();
   const [session, setSession] = useState<Session | null>(null);
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [prefCounts, setPrefCounts] = useState<TeamPreferenceCount[]>([]);
   const [loading, setLoading] = useState(true);
   const [registered, setRegistered] = useState<Registered | null>(null);
-
-  const loadExtras = useCallback(async (sessionId: string) => {
-    const [teamsRes, prefRes] = await Promise.all([
-      supabase.from('teams').select('*').eq('session_id', sessionId).order('sort_order'),
-      supabase.from('team_preference_counts').select('*').eq('session_id', sessionId),
-    ]);
-    setTeams((teamsRes.data as Team[]) ?? []);
-    setPrefCounts((prefRes.data as TeamPreferenceCount[]) ?? []);
-  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -41,7 +30,6 @@ export default function SessionPage() {
         if (cancelled) return;
         setSession(data as Session | null);
         setLoading(false);
-        if (data) loadExtras(id);
       });
 
     // Live slot counter: registered_count is trigger-maintained on sessions,
@@ -53,7 +41,6 @@ export default function SessionPage() {
         { event: 'UPDATE', schema: 'public', table: 'sessions', filter: `id=eq.${id}` },
         (payload) => {
           setSession(payload.new as Session);
-          loadExtras(id);
         },
       )
       .subscribe();
@@ -62,7 +49,7 @@ export default function SessionPage() {
       cancelled = true;
       supabase.removeChannel(channel);
     };
-  }, [id, loadExtras]);
+  }, [id]);
 
   if (loading) {
     return <main className="p-10 text-center text-muted-foreground">Loading session…</main>;
@@ -126,6 +113,16 @@ export default function SessionPage() {
             </p>
           </div>
           {session.description && <p className="mt-3 text-sm text-white/75">{session.description}</p>}
+          {session.teams_published && (
+            <button
+              onClick={() =>
+                document.getElementById('final-teams')?.scrollIntoView({ behavior: 'smooth' })
+              }
+              className="headline mt-4 inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-base tracking-wide text-green-950 shadow-md transition-transform hover:scale-[1.02] active:translate-y-px"
+            >
+              <Shirt className="h-4 w-4" /> View final teams
+            </button>
+          )}
           <div className="mt-5">
             <div className="flex items-baseline justify-between text-xs font-semibold uppercase tracking-wider text-white/70">
               <span>Slots</span>
@@ -147,7 +144,7 @@ export default function SessionPage() {
       </section>
 
       {session.teams_published && (
-        <div className="mb-8">
+        <div id="final-teams" className="mb-8 scroll-mt-4">
           <PublishedRosters sessionId={session.id} />
         </div>
       )}
@@ -189,13 +186,7 @@ export default function SessionPage() {
         <section>
           <span className="rule mb-2" />
           <h2 className="headline mb-4 text-2xl">Register</h2>
-          <RegistrationForm
-            session={session}
-            teams={teams}
-            prefCounts={prefCounts}
-            isFull={isFull}
-            onSuccess={setRegistered}
-          />
+          <RegistrationForm session={session} isFull={isFull} onSuccess={setRegistered} />
         </section>
       ) : (
         !session.teams_published && (

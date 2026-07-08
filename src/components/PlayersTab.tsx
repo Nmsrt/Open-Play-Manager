@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Download, UserCheck, UserX, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import type { Payment, Player, PaymentStatus, Team } from '@/lib/types';
+import type { Payment, Player, PaymentStatus } from '@/lib/types';
 import { downloadCsv } from '@/lib/csv';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -28,16 +28,13 @@ const paymentVariant: Record<PaymentStatus, 'warning' | 'success' | 'destructive
 interface Props {
   sessionTitle: string;
   players: PlayerWithPayments[];
-  teams: Team[];
   onChanged: () => void;
 }
 
-export default function PlayersTab({ sessionTitle, players, teams, onChanged }: Props) {
+export default function PlayersTab({ sessionTitle, players, onChanged }: Props) {
   const [search, setSearch] = useState('');
   const [payFilter, setPayFilter] = useState<'all' | PaymentStatus>('all');
   const [reviewing, setReviewing] = useState<PlayerWithPayments | null>(null);
-
-  const teamName = (id: string | null) => teams.find((t) => t.id === id)?.name ?? '—';
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -68,14 +65,14 @@ export default function PlayersTab({ sessionTitle, players, teams, onChanged }: 
   function exportCsv() {
     downloadCsv(
       `${sessionTitle.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-players.csv`,
-      ['Name', 'Email', 'Phone', 'Position', 'Skill', 'Preferred team', 'Status', 'Checked in', 'Payment status', 'Amount', 'Method', 'Reference'],
+      ['Name', 'Email', 'Phone', 'Position', 'Skill', 'Teammate requests', 'Status', 'Checked in', 'Payment status', 'Amount', 'Method', 'Reference'],
       players.map((p) => [
         p.full_name,
         p.email,
         p.phone ?? '',
         p.preferred_position,
         p.skill_level ?? '',
-        teamName(p.preferred_team),
+        p.teammate_requests ?? '',
         p.status,
         p.checked_in_at ? 'yes' : 'no',
         p.payments[0]?.status ?? '',
@@ -123,7 +120,7 @@ export default function PlayersTab({ sessionTitle, players, teams, onChanged }: 
             <TableRow>
               <TableHead>Player</TableHead>
               <TableHead>Pos</TableHead>
-              <TableHead>Prefers</TableHead>
+              <TableHead>Requests</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Payment</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -148,7 +145,15 @@ export default function PlayersTab({ sessionTitle, players, teams, onChanged }: 
                       <p className="mt-1 text-xs text-muted-foreground">{p.skill_level}</p>
                     )}
                   </TableCell>
-                  <TableCell className="text-sm">{teamName(p.preferred_team)}</TableCell>
+                  <TableCell className="max-w-[200px] text-sm">
+                    {p.teammate_requests ? (
+                      <span title={p.teammate_requests} className="line-clamp-2">
+                        🤝 {p.teammate_requests}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <Badge variant={p.status === 'registered' ? 'success' : p.status === 'waitlisted' ? 'warning' : 'secondary'}>
                       {p.status}

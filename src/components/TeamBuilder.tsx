@@ -11,7 +11,7 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { AlertTriangle, Eye, EyeOff, Printer, Shuffle, Sparkles, Save } from 'lucide-react';
+import { AlertTriangle, Eye, EyeOff, Printer, Shuffle, Save } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { Player, Position, Session, Team, TeamAssignment } from '@/lib/types';
 import { bibColor, cn } from '@/lib/utils';
@@ -61,6 +61,15 @@ function PlayerCard({
         {player.preferred_position}
       </Badge>
       <span className="min-w-0 flex-1 truncate font-medium">{player.full_name}</span>
+      {player.teammate_requests && (
+        <span
+          title={`Squad request: ${player.teammate_requests}`}
+          className="shrink-0 cursor-help text-sm"
+          aria-label={`Squad request: ${player.teammate_requests}`}
+        >
+          🤝
+        </span>
+      )}
       {source === 'self' && (
         <Badge variant="outline" title="Player picked this team themselves">
           self
@@ -243,24 +252,6 @@ export default function TeamBuilder({ session, teams, players, assignments, onSa
     setDirty(true);
   }
 
-  function applyPreferences() {
-    const teamIds = new Set(teams.map((t) => t.id));
-    const nextPlacement = { ...placement };
-    const nextSource = { ...source };
-    let changed = false;
-    for (const player of players) {
-      if (!nextPlacement[player.id] && player.preferred_team && teamIds.has(player.preferred_team)) {
-        nextPlacement[player.id] = player.preferred_team;
-        nextSource[player.id] = 'self';
-        changed = true;
-      }
-    }
-    if (!changed) return;
-    setPlacement(nextPlacement);
-    setSource(nextSource);
-    setDirty(true);
-  }
-
   function shuffleEvenly() {
     if (teams.length === 0) return;
     const next: Placement = { ...placement };
@@ -370,9 +361,6 @@ export default function TeamBuilder({ session, teams, players, assignments, onSa
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <Button variant="outline" size="sm" onClick={applyPreferences}>
-          <Sparkles className="h-4 w-4" /> Apply player preferences
-        </Button>
         <Button variant="outline" size="sm" onClick={shuffleEvenly}>
           <Shuffle className="h-4 w-4" /> Distribute pool evenly
         </Button>
@@ -458,8 +446,8 @@ export default function TeamBuilder({ session, teams, players, assignments, onSa
       </DndContext>
 
       <p className="mt-3 text-xs text-muted-foreground">
-        Cards marked <Badge variant="outline">self</Badge> were placed from the player's own team
-        preference. Drag a card to override — it then counts as admin-assigned.
+        🤝 marks players with a squad request — hover the icon to read it (full text also in the
+        Players tab).
       </p>
     </div>
   );

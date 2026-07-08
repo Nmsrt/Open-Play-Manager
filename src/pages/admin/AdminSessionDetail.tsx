@@ -83,7 +83,7 @@ export default function AdminSessionDetail() {
           <TabsTrigger value="builder">Team builder</TabsTrigger>
         </TabsList>
         <TabsContent value="players">
-          <PlayersTab sessionTitle={session.title} players={players} teams={teams} onChanged={load} />
+          <PlayersTab sessionTitle={session.title} players={players} onChanged={load} />
         </TabsContent>
         <TabsContent value="builder">
           <TeamsManager

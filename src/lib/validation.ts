@@ -11,7 +11,7 @@ export const registrationSchema = z.object({
   skill_level: z.enum(['beginner', 'intermediate', 'advanced'], {
     errorMap: () => ({ message: 'Pick your skill level' }),
   }),
-  preferred_team: z.string().uuid().or(z.literal('')).optional(),
+  teammate_requests: z.string().trim().max(300, 'Keep requests under 300 characters').optional(),
   notes: z.string().trim().max(500, 'Notes are too long').optional(),
   method: z.enum(['gcash', 'maya', 'bank', 'cash', 'other']),
 });

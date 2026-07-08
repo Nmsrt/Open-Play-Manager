@@ -33,6 +33,7 @@ export interface Player {
   preferred_position: Position;
   skill_level: SkillLevel | null;
   notes: string | null;
+  teammate_requests: string | null;
   status: PlayerStatus;
   checked_in_at: string | null;
   created_at: string;

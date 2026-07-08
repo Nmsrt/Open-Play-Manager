@@ -8,7 +8,7 @@ import {
   MAX_PROOF_BYTES,
   PROOF_MIME_TYPES,
 } from '@/lib/validation';
-import type { Session, Team, TeamPreferenceCount, PlayerStatus, Position, SkillLevel } from '@/lib/types';
+import type { Session, PlayerStatus, Position, SkillLevel } from '@/lib/types';
 import { PAYMENT_METHODS } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,8 +19,6 @@ import { cn } from '@/lib/utils';
 
 interface Props {
   session: Session;
-  teams: Team[];
-  prefCounts: TeamPreferenceCount[];
   isFull: boolean;
   onSuccess: (result: { status: PlayerStatus; values: RegistrationInput }) => void;
 }
@@ -145,7 +143,7 @@ const SKILL_OPTIONS: Array<{ value: SkillLevel; stars: string; label: string; bl
   { value: 'advanced', stars: '★★★', label: 'Baller', blurb: 'Carries the team' },
 ];
 
-export default function RegistrationForm({ session, teams, prefCounts, isFull, onSuccess }: Props) {
+export default function RegistrationForm({ session, isFull, onSuccess }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState('');
   const [proofFile, setProofFile] = useState<File | null>(null);
@@ -159,17 +157,12 @@ export default function RegistrationForm({ session, teams, prefCounts, isFull, o
     formState: { errors },
   } = useForm<RegistrationInput>({
     resolver: zodResolver(registrationSchema),
-    defaultValues: { preferred_position: 'ANY', method: 'gcash', preferred_team: '' },
+    defaultValues: { preferred_position: 'ANY', method: 'gcash' },
   });
 
   const position = watch('preferred_position');
   const skill = watch('skill_level');
-  const preferredTeam = watch('preferred_team');
   const method = watch('method');
-
-  function countFor(teamId: string) {
-    return prefCounts.find((c) => c.team_id === teamId)?.preference_count ?? 0;
-  }
 
   function handleProofChange(e: React.ChangeEvent<HTMLInputElement>) {
     setProofError('');
@@ -204,14 +197,12 @@ export default function RegistrationForm({ session, teams, prefCounts, isFull, o
         p_session_id: session.id,
         p_full_name: values.full_name,
         p_email: values.email,
-        p_phone: null,
         p_preferred_position: values.preferred_position,
         p_skill_level: values.skill_level,
         p_notes: values.notes || null,
-        p_preferred_team: values.preferred_team || null,
+        p_teammate_requests: values.teammate_requests || null,
         p_amount: session.fee_amount > 0 ? session.fee_amount : null,
         p_method: values.method,
-        p_reference_number: null,
         p_proof_image_path: proofPath,
       });
 
@@ -298,45 +289,21 @@ export default function RegistrationForm({ session, teams, prefCounts, isFull, o
           <FieldError message={errors.skill_level?.message} />
         </div>
 
-        {teams.length > 0 && (
-          <div>
-            <Label>Team preference (optional — organizer may rebalance)</Label>
-            <div className="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label="Team preference">
-              <button
-                type="button"
-                role="radio"
-                aria-checked={!preferredTeam}
-                onClick={() => setValue('preferred_team', '')}
-                className={cn(
-                  'rounded-full border px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-                  !preferredTeam
-                    ? 'border-primary bg-primary text-primary-foreground shadow-sm'
-                    : 'border-border bg-surface hover:border-primary/50 hover:bg-muted/50',
-                )}
-              >
-                No preference
-              </button>
-              {teams.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  role="radio"
-                  aria-checked={preferredTeam === t.id}
-                  onClick={() => setValue('preferred_team', t.id)}
-                  className={cn(
-                    'rounded-full border px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-                    preferredTeam === t.id
-                      ? 'border-primary bg-primary text-primary-foreground shadow-sm'
-                      : 'border-border bg-surface hover:border-primary/50 hover:bg-muted/50',
-                  )}
-                >
-                  {t.name}
-                  {t.color_tag ? ` (${t.color_tag})` : ''} · {countFor(t.id)}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        <div>
+          <Label htmlFor="teammate_requests">Squad requests 🤝 (optional)</Label>
+          <Textarea
+            id="teammate_requests"
+            className="mt-1"
+            rows={2}
+            placeholder="e.g. Put me with Miguel and Carlo — we carpool"
+            {...register('teammate_requests')}
+          />
+          <p className="mt-1 text-xs text-muted-foreground">
+            Want to play alongside (or against!) someone? Tell the organizer — final teams are
+            their call.
+          </p>
+          <FieldError message={errors.teammate_requests?.message} />
+        </div>
 
         <div>
           <Label htmlFor="notes">Notes (optional)</Label>
