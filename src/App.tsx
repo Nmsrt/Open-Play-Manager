@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import HomePage from '@/pages/public/HomePage';
 import SessionPage from '@/pages/public/SessionPage';
+import PublicLayout from '@/pages/public/PublicLayout';
 import { isSupabaseConfigured } from '@/lib/supabase';
 
 function SetupScreen() {
@@ -44,8 +45,10 @@ export default function App() {
   return (
     <Suspense fallback={<main className="p-10 text-center text-muted-foreground">Loading…</main>}>
       <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/session/:id" element={<SessionPage />} />
+        <Route element={<PublicLayout />}>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/session/:id" element={<SessionPage />} />
+        </Route>
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/admin" element={<AdminLayout />}>
