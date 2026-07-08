@@ -332,6 +332,10 @@ export default function RegistrationForm({ session, isFull, onSuccess }: Props) 
             <FieldError message={errors.skill_level?.message} />
           </div>
         </div>
+        <p className="mt-4 border-t border-dashed border-border pt-3 text-xs text-muted-foreground">
+          ⚠️ Your position isn't guaranteed — it depends on what everyone else picks too. The
+          organizers will do their best to balance the teams.
+        </p>
       </div>
 
       <div className="rounded-lg border border-border bg-surface/90 p-4 shadow-sm backdrop-blur-sm">
