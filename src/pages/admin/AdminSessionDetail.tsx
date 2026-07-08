@@ -109,7 +109,7 @@ export default function AdminSessionDetail() {
             </p>
             <p className="flex items-center gap-2">
               <Shirt className={cn('h-4 w-4 shrink-0', cover ? 'text-accent' : 'text-primary')} />
-              {session.format} · {session.players_per_team} per team · {session.team_count} teams
+              {session.format} · {session.team_count} teams
             </p>
             <p className="flex items-center gap-2">
               <Users className={cn('h-4 w-4 shrink-0', cover ? 'text-accent' : 'text-primary')} />
