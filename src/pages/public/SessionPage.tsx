@@ -203,10 +203,6 @@ export default function SessionPage() {
         </section>
       ) : isOpen ? (
         <section>
-          <div className="mb-4 inline-block rounded-md bg-surface/90 px-3 py-1.5 shadow-sm backdrop-blur-sm">
-            <span className="rule mb-1" />
-            <h2 className="headline text-2xl">Register</h2>
-          </div>
           <RegistrationForm session={session} isFull={isFull} onSuccess={setRegistered} />
         </section>
       ) : (

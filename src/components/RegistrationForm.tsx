@@ -269,7 +269,9 @@ export default function RegistrationForm({ session, isFull, onSuccess }: Props) 
       )}
 
       <div className="rounded-lg border border-border bg-surface/90 p-4 shadow-sm backdrop-blur-sm">
-        <h3 className="headline mb-3 text-lg">Your details</h3>
+        <span className="rule mb-1" />
+        <h2 className="headline text-2xl">Register</h2>
+        <h3 className="headline mb-3 mt-3 text-lg text-muted-foreground">Your details</h3>
         <div className="space-y-4">
           <div>
             <Label htmlFor="full_name">Full name</Label>
