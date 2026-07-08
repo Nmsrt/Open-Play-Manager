@@ -86,9 +86,17 @@ export interface TeamPreferenceCount {
 export const POSITIONS: Position[] = ['GK', 'DEF', 'MID', 'FWD', 'ANY'];
 export const SKILL_LEVELS: SkillLevel[] = ['beginner', 'intermediate', 'advanced'];
 export const PAYMENT_METHODS: PaymentMethod[] = ['gcash', 'maya', 'bank', 'cash', 'other'];
-export const FORMAT_DEFAULTS: Record<SessionFormat, number | null> = {
-  '5-a-side': 5,
-  '7-a-side': 7,
-  '11-a-side': 11,
-  custom: null,
-};
+// Admin only creates 7- through 11-a-side sessions (unified players/team +
+// format picker); 5-a-side and freeform 'custom' remain valid in the DB
+// enum for sessions created directly via the API, just not exposed here.
+export const PLAYERS_PER_TEAM_OPTIONS: Array<{
+  players: number;
+  format: SessionFormat;
+  label: string;
+}> = [
+  { players: 7, format: '7-a-side', label: '7-a-side' },
+  { players: 8, format: 'custom', label: '8-a-side' },
+  { players: 9, format: 'custom', label: '9-a-side' },
+  { players: 10, format: 'custom', label: '10-a-side' },
+  { players: 11, format: '11-a-side', label: '11-a-side' },
+];

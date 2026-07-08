@@ -24,7 +24,7 @@ export const sessionSchema = z.object({
   date: z.string().min(1, 'Date is required'),
   location: z.string().trim().min(2, 'Location is required').max(200),
   format: z.enum(['5-a-side', '7-a-side', '11-a-side', 'custom']),
-  players_per_team: z.coerce.number().int().min(1, 'At least 1').max(30, 'At most 30'),
+  players_per_team: z.coerce.number().int().min(7, 'Minimum is 7').max(11, 'Maximum is 11'),
   team_count: z.coerce.number().int().min(2, 'At least 2 teams').max(12, 'At most 12 teams'),
   fee_amount: z.coerce.number().min(0, 'Fee cannot be negative'),
 });

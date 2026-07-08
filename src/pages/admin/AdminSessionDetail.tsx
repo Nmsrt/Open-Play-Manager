@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, CalendarDays, MapPin, Users } from 'lucide-react';
+import { ArrowLeft, CalendarDays, MapPin, Shirt, Users } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { Session, Team, TeamAssignment } from '@/lib/types';
 import { cn, locationCover } from '@/lib/utils';
@@ -108,8 +108,12 @@ export default function AdminSessionDetail() {
               {session.location}
             </p>
             <p className="flex items-center gap-2">
+              <Shirt className={cn('h-4 w-4 shrink-0', cover ? 'text-accent' : 'text-primary')} />
+              {session.format} · {session.players_per_team} per team · {session.team_count} teams
+            </p>
+            <p className="flex items-center gap-2">
               <Users className={cn('h-4 w-4 shrink-0', cover ? 'text-accent' : 'text-primary')} />
-              {session.format} · {session.registered_count}/{session.max_players} registered
+              {session.registered_count}/{session.max_players} registered
               {waitlisted.length > 0 && ` · ${waitlisted.length} waitlisted`}
             </p>
           </div>

@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { supabase } from '@/lib/supabase';
 import { sessionSchema, type SessionInput } from '@/lib/validation';
-import { FORMAT_DEFAULTS, type Session, type SessionFormat } from '@/lib/types';
+import { PLAYERS_PER_TEAM_OPTIONS, type Session, type SessionFormat } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -48,7 +48,7 @@ export default function SessionFormDialog({ open, onOpenChange, session, onSaved
     },
   });
 
-  const format = watch('format');
+  const playersPerTeam = watch('players_per_team');
 
   useEffect(() => {
     if (!open) return;
@@ -77,10 +77,10 @@ export default function SessionFormDialog({ open, onOpenChange, session, onSaved
     }
   }, [open, session, reset]);
 
-  function onFormatChange(next: SessionFormat) {
-    setValue('format', next);
-    const preset = FORMAT_DEFAULTS[next];
-    if (preset) setValue('players_per_team', preset);
+  function onPlayersPerTeamChange(next: number) {
+    setValue('players_per_team', next);
+    const option = PLAYERS_PER_TEAM_OPTIONS.find((o) => o.players === next);
+    setValue('format', (option?.format ?? 'custom') as SessionFormat);
   }
 
   async function onSubmit(values: SessionInput) {
@@ -135,32 +135,21 @@ export default function SessionFormDialog({ open, onOpenChange, session, onSaved
               )}
             </div>
           </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <Label htmlFor="s-format">Format</Label>
+              <Label htmlFor="s-format">Format (players per team)</Label>
               <Select
                 id="s-format"
                 className="mt-1"
-                value={format}
-                onChange={(e) => onFormatChange(e.target.value as SessionFormat)}
+                value={playersPerTeam}
+                onChange={(e) => onPlayersPerTeamChange(Number(e.target.value))}
               >
-                <option value="5-a-side">5-a-side</option>
-                <option value="7-a-side">7-a-side</option>
-                <option value="11-a-side">11-a-side</option>
-                <option value="custom">Custom</option>
+                {PLAYERS_PER_TEAM_OPTIONS.map((o) => (
+                  <option key={o.players} value={o.players}>
+                    {o.label}
+                  </option>
+                ))}
               </Select>
-            </div>
-            <div>
-              <Label htmlFor="s-ppt">Players / team</Label>
-              <Input
-                id="s-ppt"
-                type="number"
-                min={1}
-                max={30}
-                className="mt-1"
-                disabled={format !== 'custom'}
-                {...register('players_per_team')}
-              />
               {errors.players_per_team && (
                 <p className="mt-1 text-sm text-destructive">{errors.players_per_team.message}</p>
               )}
