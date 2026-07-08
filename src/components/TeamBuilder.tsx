@@ -72,10 +72,15 @@ function PlayerCard({
           onJersey();
         }}
         onPointerDown={(e) => e.stopPropagation()}
-        className="shrink-0 rounded border border-border px-1.5 py-0.5 text-xs text-muted-foreground hover:bg-muted"
+        className={cn(
+          'flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-xs font-bold transition-colors',
+          jersey != null
+            ? 'headline bg-foreground text-white shadow-sm'
+            : 'border border-dashed border-border text-muted-foreground hover:border-primary/50 hover:text-primary',
+        )}
         title="Set jersey number"
       >
-        {jersey != null ? `#${jersey}` : '#'}
+        {jersey != null ? jersey : '#'}
       </button>
     </div>
   );
@@ -87,6 +92,9 @@ function Column({
   subtitle,
   warning,
   accent,
+  variant,
+  count,
+  targetSize,
   children,
 }: {
   id: string;
@@ -94,20 +102,37 @@ function Column({
   subtitle?: string;
   warning?: string;
   accent?: string | null;
+  variant: 'pool' | 'team';
+  count: number;
+  targetSize?: number;
   children: React.ReactNode;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id });
+  const openSlots = variant === 'team' && targetSize ? Math.max(0, targetSize - count) : 0;
+
   return (
     <div
       ref={setNodeRef}
       style={accent ? { borderTopColor: accent } : undefined}
       className={cn(
-        'flex min-h-[220px] flex-col rounded-lg border border-border border-t-4 bg-surface/70 p-3 shadow-sm transition-colors',
-        !accent && 'border-t-border',
-        isOver && 'border-primary bg-green-50 border-t-primary',
+        'relative flex min-h-[240px] flex-col overflow-hidden rounded-lg p-3 transition-all',
+        variant === 'team' &&
+          'border border-border border-t-4 shadow-sm [background:repeating-linear-gradient(0deg,#f1f7f2_0_28px,#e9f2ea_28px_56px)]',
+        variant === 'team' && !accent && 'border-t-border',
+        variant === 'pool' && 'border-2 border-dashed border-border bg-muted/50',
+        isOver && 'scale-[1.01] border-primary shadow-md',
+        isOver && variant === 'team' && 'border-t-primary',
       )}
     >
-      <div className="mb-2">
+      {/* Faint centre circle on the mini-pitch */}
+      {variant === 'team' && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary/10"
+        />
+      )}
+
+      <div className="relative mb-2">
         <p className="headline flex items-center gap-2 text-lg">
           {accent && (
             <span
@@ -116,7 +141,16 @@ function Column({
               style={{ background: accent }}
             />
           )}
-          {title}
+          <span className="min-w-0 truncate">{title}</span>
+          <span
+            className={cn(
+              'ml-auto shrink-0 rounded px-1.5 py-0.5 font-sans text-xs font-bold tabular-nums',
+              variant === 'team' ? 'bg-foreground text-white' : 'bg-border text-muted-foreground',
+            )}
+          >
+            {count}
+            {targetSize ? `/${targetSize}` : ''}
+          </span>
         </p>
         {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
         {warning && (
@@ -125,7 +159,24 @@ function Column({
           </p>
         )}
       </div>
-      <div className="flex flex-1 flex-col gap-2">{children}</div>
+
+      <div className="relative flex flex-1 flex-col gap-2">
+        {children}
+        {Array.from({ length: openSlots }).map((_, i) => (
+          <div
+            key={`slot-${i}`}
+            aria-hidden
+            className="rounded-md border-2 border-dashed border-primary/20 p-2 text-center text-xs font-medium text-primary/40"
+          >
+            open slot
+          </div>
+        ))}
+        {variant === 'pool' && count === 0 && (
+          <p className="py-6 text-center text-xs text-muted-foreground">
+            Bench is empty — everyone's on a pitch 🎉
+          </p>
+        )}
+      </div>
     </div>
   );
 }
@@ -360,8 +411,10 @@ export default function TeamBuilder({ session, teams, players, assignments, onSa
         >
           <Column
             id="pool"
-            title="Pool"
-            subtitle={`${(byTeam.get(null) ?? []).length} unassigned`}
+            title="🪑 Dugout"
+            variant="pool"
+            count={(byTeam.get(null) ?? []).length}
+            subtitle="Drag players onto a pitch"
           >
             {(byTeam.get(null) ?? []).map((p) => (
               <PlayerCard key={p.id} player={p} jersey={jerseys[p.id] ?? null} onJersey={() => editJersey(p)} />
@@ -376,8 +429,11 @@ export default function TeamBuilder({ session, teams, players, assignments, onSa
                 key={t.id}
                 id={t.id}
                 title={t.name}
+                variant="team"
+                count={members.length}
+                targetSize={session.players_per_team}
                 accent={bibColor(t.color_tag) ?? bibColor(t.name)}
-                subtitle={`${t.color_tag ? `${t.color_tag} · ` : ''}${members.length}/${session.players_per_team} players`}
+                subtitle={t.color_tag || undefined}
                 warning={
                   over
                     ? `Over capacity (${members.length}/${session.players_per_team})`

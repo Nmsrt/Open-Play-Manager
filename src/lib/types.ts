@@ -28,7 +28,7 @@ export interface Player {
   session_id: string;
   full_name: string;
   email: string;
-  phone: string;
+  phone: string | null;
   preferred_team: string | null;
   preferred_position: Position;
   skill_level: SkillLevel | null;

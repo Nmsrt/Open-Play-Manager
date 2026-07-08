@@ -42,7 +42,7 @@ export default function PlayersTab({ sessionTitle, players, teams, onChanged }: 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return players.filter((p) => {
-      if (q && !`${p.full_name} ${p.email} ${p.phone}`.toLowerCase().includes(q)) return false;
+      if (q && !`${p.full_name} ${p.email} ${p.phone ?? ''}`.toLowerCase().includes(q)) return false;
       if (payFilter !== 'all' && p.payments[0]?.status !== payFilter) return false;
       return true;
     });
@@ -72,7 +72,7 @@ export default function PlayersTab({ sessionTitle, players, teams, onChanged }: 
       players.map((p) => [
         p.full_name,
         p.email,
-        p.phone,
+        p.phone ?? '',
         p.preferred_position,
         p.skill_level ?? '',
         teamName(p.preferred_team),
@@ -137,7 +137,8 @@ export default function PlayersTab({ sessionTitle, players, teams, onChanged }: 
                   <TableCell>
                     <p className="font-medium">{p.full_name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {p.email} · {p.phone}
+                      {p.email}
+                      {p.phone ? ` · ${p.phone}` : ''}
                     </p>
                     {p.notes && <p className="text-xs italic text-muted-foreground">“{p.notes}”</p>}
                   </TableCell>

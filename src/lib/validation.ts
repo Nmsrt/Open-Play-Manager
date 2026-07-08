@@ -7,16 +7,13 @@ export const registrationSchema = z.object({
     .min(2, 'Name must be at least 2 characters')
     .max(80, 'Name is too long'),
   email: z.string().trim().email('Enter a valid email address').max(254),
-  phone: z
-    .string()
-    .trim()
-    .regex(/^[0-9+() -]{7,20}$/, 'Enter a valid phone number (7–20 digits)'),
   preferred_position: z.enum(['GK', 'DEF', 'MID', 'FWD', 'ANY']),
-  skill_level: z.enum(['beginner', 'intermediate', 'advanced']).or(z.literal('')).optional(),
+  skill_level: z.enum(['beginner', 'intermediate', 'advanced'], {
+    errorMap: () => ({ message: 'Pick your skill level' }),
+  }),
   preferred_team: z.string().uuid().or(z.literal('')).optional(),
   notes: z.string().trim().max(500, 'Notes are too long').optional(),
   method: z.enum(['gcash', 'maya', 'bank', 'cash', 'other']),
-  reference_number: z.string().trim().max(100, 'Reference number is too long').optional(),
 });
 
 export type RegistrationInput = z.infer<typeof registrationSchema>;

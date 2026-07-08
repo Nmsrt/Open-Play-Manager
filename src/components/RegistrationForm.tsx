@@ -8,8 +8,8 @@ import {
   MAX_PROOF_BYTES,
   PROOF_MIME_TYPES,
 } from '@/lib/validation';
-import type { Session, Team, TeamPreferenceCount, PlayerStatus } from '@/lib/types';
-import { POSITIONS, SKILL_LEVELS, PAYMENT_METHODS } from '@/lib/types';
+import type { Session, Team, TeamPreferenceCount, PlayerStatus, Position, SkillLevel } from '@/lib/types';
+import { PAYMENT_METHODS } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,6 +34,117 @@ function FieldError({ message }: { message?: string }) {
   );
 }
 
+const POSITION_BLURBS: Record<Position, string> = {
+  GK: 'Keeper — the last wall 🧤',
+  DEF: 'Defender — nothing gets past you 🛡️',
+  MID: 'Midfielder — the engine room 🔋',
+  FWD: 'Striker — goals, goals, goals ⚽',
+  ANY: "Anywhere — coach's call 🎲",
+};
+
+const PITCH_SPOTS: Array<{ pos: Position; label: string; top: string }> = [
+  { pos: 'FWD', label: 'Striker', top: '16%' },
+  { pos: 'MID', label: 'Midfield', top: '44%' },
+  { pos: 'DEF', label: 'Defence', top: '68%' },
+  { pos: 'GK', label: 'Keeper', top: '88%' },
+];
+
+/** Tap-your-spot mini pitch: pick a position by standing on it. */
+function PitchPositionPicker({
+  value,
+  onChange,
+}: {
+  value: Position;
+  onChange: (p: Position) => void;
+}) {
+  return (
+    <div role="radiogroup" aria-label="Preferred position">
+      <div
+        className="relative mx-auto aspect-[3/4] w-full max-w-[260px] overflow-hidden rounded-xl border-4 border-white shadow-md"
+        style={{
+          background:
+            'repeating-linear-gradient(0deg, #15803d 0 12.5%, #16893f 12.5% 25%)',
+        }}
+      >
+        {/* Pitch markings */}
+        <div aria-hidden className="absolute inset-2 rounded-md border-2 border-white/50" />
+        <div aria-hidden className="absolute left-2 right-2 top-1/2 h-0.5 bg-white/50" />
+        <div
+          aria-hidden
+          className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/50"
+        />
+        <div
+          aria-hidden
+          className="absolute bottom-2 left-1/2 h-16 w-36 -translate-x-1/2 border-2 border-b-0 border-white/50"
+        />
+        <div
+          aria-hidden
+          className="absolute bottom-2 left-1/2 h-7 w-20 -translate-x-1/2 border-2 border-b-0 border-white/50"
+        />
+
+        {PITCH_SPOTS.map(({ pos, label, top }) => {
+          const selected = value === pos;
+          return (
+            <button
+              key={pos}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              onClick={() => onChange(pos)}
+              className="absolute left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 focus-visible:outline-none"
+              style={{ top }}
+            >
+              <span
+                className={cn(
+                  'flex h-12 w-12 items-center justify-center rounded-full border-2 text-sm font-bold transition-all',
+                  selected
+                    ? 'scale-110 border-white bg-accent text-green-950 shadow-lg ring-4 ring-white/40'
+                    : 'border-white/70 bg-white/15 text-white backdrop-blur-[1px] hover:scale-105 hover:bg-white/30',
+                )}
+              >
+                {pos}
+              </span>
+              <span
+                className={cn(
+                  'rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide transition-colors',
+                  selected ? 'bg-white text-green-900' : 'text-white/90',
+                )}
+              >
+                {label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <button
+        type="button"
+        role="radio"
+        aria-checked={value === 'ANY'}
+        onClick={() => onChange('ANY')}
+        className={cn(
+          'mx-auto mt-3 flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-all',
+          value === 'ANY'
+            ? 'scale-105 border-primary bg-primary text-primary-foreground shadow-sm'
+            : 'border-border bg-surface hover:border-primary/50',
+        )}
+      >
+        🎲 Put me anywhere
+      </button>
+
+      <p aria-live="polite" className="mt-2 text-center text-sm font-medium text-primary">
+        {POSITION_BLURBS[value]}
+      </p>
+    </div>
+  );
+}
+
+const SKILL_OPTIONS: Array<{ value: SkillLevel; stars: string; label: string; blurb: string }> = [
+  { value: 'beginner', stars: '★', label: 'Rookie', blurb: 'Here for the fun' },
+  { value: 'intermediate', stars: '★★', label: 'Regular', blurb: 'Knows the game' },
+  { value: 'advanced', stars: '★★★', label: 'Baller', blurb: 'Carries the team' },
+];
+
 export default function RegistrationForm({ session, teams, prefCounts, isFull, onSuccess }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState('');
@@ -52,6 +163,7 @@ export default function RegistrationForm({ session, teams, prefCounts, isFull, o
   });
 
   const position = watch('preferred_position');
+  const skill = watch('skill_level');
   const preferredTeam = watch('preferred_team');
   const method = watch('method');
 
@@ -92,14 +204,14 @@ export default function RegistrationForm({ session, teams, prefCounts, isFull, o
         p_session_id: session.id,
         p_full_name: values.full_name,
         p_email: values.email,
-        p_phone: values.phone,
+        p_phone: null,
         p_preferred_position: values.preferred_position,
-        p_skill_level: values.skill_level || null,
+        p_skill_level: values.skill_level,
         p_notes: values.notes || null,
         p_preferred_team: values.preferred_team || null,
         p_amount: session.fee_amount > 0 ? session.fee_amount : null,
         p_method: values.method,
-        p_reference_number: values.reference_number || null,
+        p_reference_number: null,
         p_proof_image_path: proofPath,
       });
 
@@ -142,45 +254,48 @@ export default function RegistrationForm({ session, teams, prefCounts, isFull, o
           <Input id="email" type="email" className="mt-1" autoComplete="email" {...register('email')} />
           <FieldError message={errors.email?.message} />
         </div>
-        <div>
-          <Label htmlFor="phone">Phone</Label>
-          <Input id="phone" type="tel" className="mt-1" autoComplete="tel" {...register('phone')} />
-          <FieldError message={errors.phone?.message} />
-        </div>
 
         <div>
-          <Label>Preferred position (optional)</Label>
-          <div className="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label="Preferred position">
-            {POSITIONS.map((p) => (
-              <button
-                key={p}
-                type="button"
-                role="radio"
-                aria-checked={position === p}
-                onClick={() => setValue('preferred_position', p)}
-                className={cn(
-                  'rounded-full border px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-                  position === p
-                    ? 'border-primary bg-primary text-primary-foreground shadow-sm'
-                    : 'border-border bg-surface hover:border-primary/50 hover:bg-muted/50',
-                )}
-              >
-                {p}
-              </button>
-            ))}
+          <Label>Where do you play?</Label>
+          <div className="mt-2">
+            <PitchPositionPicker
+              value={position}
+              onChange={(p) => setValue('preferred_position', p)}
+            />
           </div>
         </div>
 
         <div>
-          <Label htmlFor="skill_level">Skill level (optional)</Label>
-          <Select id="skill_level" className="mt-1" {...register('skill_level')}>
-            <option value="">Prefer not to say</option>
-            {SKILL_LEVELS.map((s) => (
-              <option key={s} value={s}>
-                {s[0].toUpperCase() + s.slice(1)}
-              </option>
-            ))}
-          </Select>
+          <Label>Skill level</Label>
+          <div className="mt-2 grid grid-cols-3 gap-2" role="radiogroup" aria-label="Skill level">
+            {SKILL_OPTIONS.map((opt) => {
+              const selected = skill === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  onClick={() => setValue('skill_level', opt.value, { shouldValidate: true })}
+                  className={cn(
+                    'flex flex-col items-center rounded-lg border px-2 py-3 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+                    selected
+                      ? 'scale-[1.03] border-primary bg-primary text-primary-foreground shadow-sm'
+                      : 'border-border bg-surface hover:border-primary/50 hover:bg-muted/50',
+                  )}
+                >
+                  <span className={cn('text-base leading-none', selected ? 'text-accent' : 'text-amber-500')}>
+                    {opt.stars}
+                  </span>
+                  <span className="mt-1 text-sm font-bold">{opt.label}</span>
+                  <span className={cn('text-[11px]', selected ? 'text-white/80' : 'text-muted-foreground')}>
+                    {opt.blurb}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <FieldError message={errors.skill_level?.message} />
         </div>
 
         {teams.length > 0 && (
@@ -245,29 +360,17 @@ export default function RegistrationForm({ session, teams, prefCounts, isFull, o
           </Select>
         </div>
         {method !== 'cash' && (
-          <>
-            <div>
-              <Label htmlFor="reference_number">Reference number</Label>
-              <Input
-                id="reference_number"
-                className="mt-1"
-                placeholder="e.g. GCash ref no."
-                {...register('reference_number')}
-              />
-              <FieldError message={errors.reference_number?.message} />
-            </div>
-            <div>
-              <Label htmlFor="proof">Proof of payment (optional, image up to 5 MB)</Label>
-              <Input
-                id="proof"
-                type="file"
-                accept={PROOF_MIME_TYPES.join(',')}
-                className="mt-1"
-                onChange={handleProofChange}
-              />
-              <FieldError message={proofError} />
-            </div>
-          </>
+          <div>
+            <Label htmlFor="proof">Proof of payment (screenshot, up to 5 MB)</Label>
+            <Input
+              id="proof"
+              type="file"
+              accept={PROOF_MIME_TYPES.join(',')}
+              className="mt-1"
+              onChange={handleProofChange}
+            />
+            <FieldError message={proofError} />
+          </div>
         )}
       </fieldset>
 

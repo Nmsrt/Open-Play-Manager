@@ -169,9 +169,7 @@ export default function SessionPage() {
             </p>
             <div className="mt-5 rounded-md border-2 border-dashed border-border p-4 text-sm">
               <p className="headline text-xl">{registered.values.full_name}</p>
-              <p className="text-muted-foreground">
-                {registered.values.email} · {registered.values.phone}
-              </p>
+              <p className="text-muted-foreground">{registered.values.email}</p>
               <hr className="my-3 border-dashed border-border" />
               <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                 <span className="text-muted-foreground">Session</span>
@@ -180,12 +178,6 @@ export default function SessionPage() {
                 <span className="font-medium">{formatDate(session.date)}</span>
                 <span className="text-muted-foreground">Venue</span>
                 <span className="font-medium">{session.location}</span>
-                {registered.values.reference_number && (
-                  <>
-                    <span className="text-muted-foreground">Payment ref</span>
-                    <span className="font-medium">{registered.values.reference_number}</span>
-                  </>
-                )}
               </div>
             </div>
             <p className="mt-4 text-center text-xs text-muted-foreground">
