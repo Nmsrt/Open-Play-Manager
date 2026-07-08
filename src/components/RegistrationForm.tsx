@@ -47,6 +47,16 @@ const PITCH_SPOTS: Array<{ pos: Position; label: string; top: string }> = [
   { pos: 'GK', label: 'Keeper', top: '88%' },
 ];
 
+// Literal Tailwind classes (not interpolated) so each position gets its own
+// hover tint on the mini pitch — Striker warms red, Midfield cools blue, etc.
+const POSITION_HOVER_CLASSES: Record<Position, string> = {
+  FWD: 'hover:border-red-200 hover:bg-red-400/50',
+  MID: 'hover:border-sky-200 hover:bg-sky-400/50',
+  DEF: 'hover:border-amber-200 hover:bg-amber-400/50',
+  GK: 'hover:border-violet-200 hover:bg-violet-400/50',
+  ANY: 'hover:border-white hover:bg-white/30',
+};
+
 /** Tap-your-spot mini pitch: pick a position by standing on it. */
 function PitchPositionPicker({
   value,
@@ -97,7 +107,10 @@ function PitchPositionPicker({
                   'flex h-12 w-12 items-center justify-center rounded-full border-2 text-sm font-bold transition-all',
                   selected
                     ? 'scale-110 border-white bg-accent text-green-950 shadow-lg ring-4 ring-white/40'
-                    : 'border-white/70 bg-white/15 text-white backdrop-blur-[1px] hover:scale-105 hover:bg-white/30',
+                    : cn(
+                        'border-white/70 bg-white/15 text-white backdrop-blur-[1px] hover:scale-110 hover:text-white hover:shadow-md',
+                        POSITION_HOVER_CLASSES[pos],
+                      ),
                 )}
               >
                 {pos}
@@ -234,7 +247,8 @@ export default function RegistrationForm({ session, isFull, onSuccess }: Props) 
         </div>
       )}
 
-      <div className="space-y-4">
+      <fieldset className="space-y-4 rounded-lg border border-border bg-surface/90 p-4 shadow-sm backdrop-blur-sm">
+        <legend className="headline px-2 text-lg">Your details</legend>
         <div>
           <Label htmlFor="full_name">Full name</Label>
           <Input id="full_name" className="mt-1" autoComplete="name" {...register('full_name')} />
@@ -245,7 +259,10 @@ export default function RegistrationForm({ session, isFull, onSuccess }: Props) 
           <Input id="email" type="email" className="mt-1" autoComplete="email" {...register('email')} />
           <FieldError message={errors.email?.message} />
         </div>
+      </fieldset>
 
+      <fieldset className="space-y-4 rounded-lg border border-border bg-surface/90 p-4 shadow-sm backdrop-blur-sm">
+        <legend className="headline px-2 text-lg">On the pitch</legend>
         <div>
           <Label>Where do you play?</Label>
           <div className="mt-2">
@@ -288,7 +305,10 @@ export default function RegistrationForm({ session, isFull, onSuccess }: Props) 
           </div>
           <FieldError message={errors.skill_level?.message} />
         </div>
+      </fieldset>
 
+      <fieldset className="space-y-4 rounded-lg border border-border bg-surface/90 p-4 shadow-sm backdrop-blur-sm">
+        <legend className="headline px-2 text-lg">Squad &amp; notes</legend>
         <div>
           <Label htmlFor="teammate_requests">Squad requests 🤝 (optional)</Label>
           <Textarea
@@ -310,9 +330,9 @@ export default function RegistrationForm({ session, isFull, onSuccess }: Props) 
           <Textarea id="notes" className="mt-1" rows={2} {...register('notes')} />
           <FieldError message={errors.notes?.message} />
         </div>
-      </div>
+      </fieldset>
 
-      <fieldset className="space-y-4 rounded-lg border border-border bg-surface p-4 shadow-sm">
+      <fieldset className="space-y-4 rounded-lg border border-border bg-surface/90 p-4 shadow-sm backdrop-blur-sm">
         <legend className="headline px-2 text-lg">
           Payment{session.fee_amount > 0 ? ` — ₱${session.fee_amount}` : ''}
         </legend>

@@ -28,8 +28,9 @@ export default function HomePage() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 pb-16">
-      {/* Hero — matchday-programme masthead with a faint centre circle. */}
-      <header className="relative overflow-hidden py-14 text-center">
+      {/* Hero — matchday-programme masthead with a faint centre circle,
+          set on a translucent card so it stays legible over the photo. */}
+      <header className="relative mt-6 overflow-hidden rounded-xl border border-border bg-surface/90 py-14 text-center shadow-sm backdrop-blur-sm">
         <div
           aria-hidden
           className="pointer-events-none absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary/10"
@@ -107,8 +108,10 @@ export default function HomePage() {
 
       {past.length > 0 && (
         <section className="mt-12">
-          <span className="rule mb-2" />
-          <h2 className="headline mb-3 text-xl">Recent sessions</h2>
+          <div className="mb-3 inline-block rounded-md bg-surface/90 px-3 py-1.5 shadow-sm backdrop-blur-sm">
+            <span className="rule mb-1" />
+            <h2 className="headline text-xl">Recent sessions</h2>
+          </div>
           <div className="space-y-2">
             {past.map((s) => (
               <Link
