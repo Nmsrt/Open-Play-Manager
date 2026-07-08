@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { bibColor } from '@/lib/utils';
 import type { Team } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -57,8 +58,15 @@ export default function TeamsManager({ sessionId, teams, teamCount, onChanged }:
         {teams.map((t) => (
           <span
             key={t.id}
-            className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1 text-sm"
+            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1 text-sm shadow-sm"
           >
+            {(bibColor(t.color_tag) ?? bibColor(t.name)) && (
+              <span
+                aria-hidden
+                className="inline-block h-2.5 w-2.5 rounded-full border border-black/10"
+                style={{ background: bibColor(t.color_tag) ?? bibColor(t.name) ?? undefined }}
+              />
+            )}
             {t.name}
             {t.color_tag && <span className="text-muted-foreground">· {t.color_tag}</span>}
             <button

@@ -161,8 +161,8 @@ export default function RegistrationForm({ session, teams, prefCounts, isFull, o
                 className={cn(
                   'rounded-full border px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
                   position === p
-                    ? 'border-primary bg-primary text-primary-foreground'
-                    : 'border-border bg-background hover:bg-muted',
+                    ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                    : 'border-border bg-surface hover:border-primary/50 hover:bg-muted/50',
                 )}
               >
                 {p}
@@ -195,8 +195,8 @@ export default function RegistrationForm({ session, teams, prefCounts, isFull, o
                 className={cn(
                   'rounded-full border px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
                   !preferredTeam
-                    ? 'border-primary bg-primary text-primary-foreground'
-                    : 'border-border bg-background hover:bg-muted',
+                    ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                    : 'border-border bg-surface hover:border-primary/50 hover:bg-muted/50',
                 )}
               >
                 No preference
@@ -211,8 +211,8 @@ export default function RegistrationForm({ session, teams, prefCounts, isFull, o
                   className={cn(
                     'rounded-full border px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
                     preferredTeam === t.id
-                      ? 'border-primary bg-primary text-primary-foreground'
-                      : 'border-border bg-background hover:bg-muted',
+                      ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                      : 'border-border bg-surface hover:border-primary/50 hover:bg-muted/50',
                   )}
                 >
                   {t.name}
@@ -230,8 +230,8 @@ export default function RegistrationForm({ session, teams, prefCounts, isFull, o
         </div>
       </div>
 
-      <fieldset className="space-y-4 rounded-lg border border-border p-4">
-        <legend className="px-1 text-sm font-semibold">
+      <fieldset className="space-y-4 rounded-lg border border-border bg-surface p-4 shadow-sm">
+        <legend className="headline px-2 text-lg">
           Payment{session.fee_amount > 0 ? ` — ₱${session.fee_amount}` : ''}
         </legend>
         <div>

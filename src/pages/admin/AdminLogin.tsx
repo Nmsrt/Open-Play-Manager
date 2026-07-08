@@ -32,7 +32,8 @@ export default function AdminLogin() {
     <main className="mx-auto flex min-h-screen max-w-md items-center px-4">
       <Card className="w-full">
         <CardHeader>
-          <CardTitle>Organizer login</CardTitle>
+          <span className="rule mb-1" />
+          <CardTitle className="headline text-2xl">Organizer login</CardTitle>
           <CardDescription>Admin access for OpenPlay session management.</CardDescription>
         </CardHeader>
         <CardContent>

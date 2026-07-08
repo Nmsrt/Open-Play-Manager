@@ -13,11 +13,11 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen">
-      <header className="no-print sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
+      <header className="no-print sticky top-0 z-40 border-b-2 border-primary bg-surface/95 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
           <nav className="flex items-center gap-4">
-            <Link to="/admin" className="font-semibold">
-              ⚽ OpenPlay Admin
+            <Link to="/admin" className="headline text-xl tracking-wide">
+              ⚽ OpenPlay <span className="text-primary">Admin</span>
             </Link>
             <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">
               Public site

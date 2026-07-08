@@ -64,9 +64,9 @@ export default function PrintRoster() {
             .sort((a, b) => a.players.full_name.localeCompare(b.players.full_name));
           return (
             <section key={t.id} className="break-inside-avoid">
-              <h2 className="mb-1 text-lg font-semibold">
+              <h2 className="headline mb-1 text-xl">
                 {t.name}
-                {t.color_tag && <span className="ml-2 text-sm font-normal text-muted-foreground">({t.color_tag})</span>}
+                {t.color_tag && <span className="ml-2 text-sm font-normal normal-case text-muted-foreground">({t.color_tag})</span>}
               </h2>
               <table className="w-full border-collapse text-sm">
                 <tbody>

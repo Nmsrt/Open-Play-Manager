@@ -6,7 +6,6 @@ import type { Session, Team, TeamPreferenceCount, PlayerStatus } from '@/lib/typ
 import type { RegistrationInput } from '@/lib/validation';
 import { formatDate } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import RegistrationForm from '@/components/RegistrationForm';
 import PublishedRosters from '@/components/PublishedRosters';
 
@@ -72,9 +71,9 @@ export default function SessionPage() {
   if (!session) {
     return (
       <main className="mx-auto max-w-xl p-10 text-center">
-        <h1 className="text-xl font-semibold">Session not found</h1>
+        <h1 className="headline text-2xl">Session not found</h1>
         <p className="mt-2 text-muted-foreground">It may have been removed or isn't public yet.</p>
-        <Link to="/" className="mt-4 inline-block text-primary hover:underline">
+        <Link to="/" className="mt-4 inline-block font-medium text-primary hover:underline">
           Back to sessions
         </Link>
       </main>
@@ -87,71 +86,117 @@ export default function SessionPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">
-      <Link to="/" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+      <Link
+        to="/"
+        className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+      >
         <ArrowLeft className="h-4 w-4" /> All sessions
       </Link>
 
-      <Card className="mb-6">
-        <CardHeader className="pb-2">
-          <div className="flex items-start justify-between gap-2">
-            <CardTitle className="text-2xl">{session.title}</CardTitle>
-            <Badge variant={isOpen ? (isFull ? 'warning' : 'success') : 'secondary'}>
-              {isOpen ? (isFull ? 'Waitlist open' : `${slotsLeft} slots left`) : session.status}
+      {/* Match header — dark pitch panel, scoreboard energy. */}
+      <section className="relative mb-6 overflow-hidden rounded-lg bg-primary-deep text-white shadow-lg">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full border-2 border-white/10"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-16 -top-16 h-32 w-32 rounded-full border-2 border-white/10"
+        />
+        <div className="p-6">
+          <div className="flex items-start justify-between gap-3">
+            <h1 className="headline text-4xl leading-none">{session.title}</h1>
+            <Badge
+              variant={isOpen ? (isFull ? 'warning' : 'success') : 'secondary'}
+              className="mt-1 shrink-0"
+            >
+              {isOpen ? (isFull ? 'Waitlist open' : 'Open') : session.status}
             </Badge>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm">
-          <p className="flex items-center gap-2 text-muted-foreground">
-            <CalendarDays className="h-4 w-4" /> {formatDate(session.date)}
-          </p>
-          <p className="flex items-center gap-2 text-muted-foreground">
-            <MapPin className="h-4 w-4" /> {session.location}
-          </p>
-          <p className="flex items-center gap-2 text-muted-foreground">
-            <Users className="h-4 w-4" /> {session.format} · {session.players_per_team} per team ·{' '}
-            {session.registered_count}/{session.max_players} registered
-          </p>
-          {session.description && <p className="pt-2">{session.description}</p>}
-        </CardContent>
-      </Card>
+          <div className="mt-4 space-y-1.5 text-sm text-white/85">
+            <p className="flex items-center gap-2">
+              <CalendarDays className="h-4 w-4 text-accent" /> {formatDate(session.date)}
+            </p>
+            <p className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-accent" /> {session.location}
+            </p>
+            <p className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-accent" /> {session.format} ·{' '}
+              {session.players_per_team} per team
+            </p>
+          </div>
+          {session.description && <p className="mt-3 text-sm text-white/75">{session.description}</p>}
+          <div className="mt-5">
+            <div className="flex items-baseline justify-between text-xs font-semibold uppercase tracking-wider text-white/70">
+              <span>Slots</span>
+              <span className="tabular-nums text-white">
+                {session.registered_count}/{session.max_players}
+                {isOpen && !isFull && ` · ${slotsLeft} left`}
+              </span>
+            </div>
+            <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-white/15">
+              <div
+                className="h-full rounded-full bg-accent transition-[width] duration-500"
+                style={{
+                  width: `${Math.min(100, (session.registered_count / session.max_players) * 100)}%`,
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
 
-      {session.teams_published && <div className="mb-8"><PublishedRosters sessionId={session.id} /></div>}
+      {session.teams_published && (
+        <div className="mb-8">
+          <PublishedRosters sessionId={session.id} />
+        </div>
+      )}
 
       {registered ? (
-        <Card>
-          <CardContent className="py-8 text-center">
-            <CheckCircle2 className="mx-auto h-12 w-12 text-primary" />
-            <h2 className="mt-3 text-xl font-semibold">
-              {registered.status === 'waitlisted' ? "You're on the waitlist" : "You're registered!"}
-            </h2>
-            <p className="mt-2 text-sm text-muted-foreground">
+        // Ticket-style confirmation, like a matchday pass.
+        <section className="overflow-hidden rounded-lg border border-border bg-surface shadow-sm">
+          <div className="bg-primary px-6 py-3">
+            <p className="headline flex items-center gap-2 text-lg text-white">
+              <CheckCircle2 className="h-5 w-5 text-accent" />
+              {registered.status === 'waitlisted' ? 'Waitlist pass' : 'Matchday pass'}
+            </p>
+          </div>
+          <div className="p-6">
+            <p className="text-sm text-muted-foreground">
               {registered.status === 'waitlisted'
-                ? 'You will be promoted automatically if a spot opens up.'
-                : 'The organizer will verify your payment before the session.'}
+                ? "You're on the waitlist — you'll be promoted automatically if a spot opens up."
+                : 'You are in. The organizer will verify your payment before the session.'}
             </p>
-            <div className="mx-auto mt-6 max-w-sm rounded-md border border-border p-4 text-left text-sm">
-              <p className="font-semibold">{registered.values.full_name}</p>
-              <p className="text-muted-foreground">{registered.values.email}</p>
-              <p className="text-muted-foreground">{registered.values.phone}</p>
-              <hr className="my-2 border-border" />
-              <p>
-                {session.title} · {formatDate(session.date)}
+            <div className="mt-5 rounded-md border-2 border-dashed border-border p-4 text-sm">
+              <p className="headline text-xl">{registered.values.full_name}</p>
+              <p className="text-muted-foreground">
+                {registered.values.email} · {registered.values.phone}
               </p>
-              <p className="text-muted-foreground">{session.location}</p>
-              {registered.values.reference_number && (
-                <p className="mt-2 text-muted-foreground">
-                  Payment ref: {registered.values.reference_number}
-                </p>
-              )}
+              <hr className="my-3 border-dashed border-border" />
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                <span className="text-muted-foreground">Session</span>
+                <span className="font-medium">{session.title}</span>
+                <span className="text-muted-foreground">Kick-off</span>
+                <span className="font-medium">{formatDate(session.date)}</span>
+                <span className="text-muted-foreground">Venue</span>
+                <span className="font-medium">{session.location}</span>
+                {registered.values.reference_number && (
+                  <>
+                    <span className="text-muted-foreground">Payment ref</span>
+                    <span className="font-medium">{registered.values.reference_number}</span>
+                  </>
+                )}
+              </div>
             </div>
-            <p className="mt-4 text-xs text-muted-foreground">
-              Keep a screenshot of this for your records.
+            <p className="mt-4 text-center text-xs text-muted-foreground">
+              Keep a screenshot of this pass for your records.
             </p>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       ) : isOpen ? (
         <section>
-          <h2 className="mb-4 text-xl font-semibold">Register</h2>
+          <span className="rule mb-2" />
+          <h2 className="headline mb-4 text-2xl">Register</h2>
           <RegistrationForm
             session={session}
             teams={teams}
@@ -162,7 +207,9 @@ export default function SessionPage() {
         </section>
       ) : (
         !session.teams_published && (
-          <p className="text-center text-muted-foreground">Registration for this session is closed.</p>
+          <p className="text-center text-muted-foreground">
+            Registration for this session is closed.
+          </p>
         )
       )}
     </main>

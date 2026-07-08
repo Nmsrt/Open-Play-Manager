@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { bibColor } from '@/lib/utils';
 import type { PublicRosterRow } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
@@ -46,12 +47,28 @@ export default function PublishedRosters({ sessionId }: { sessionId: string }) {
 
   return (
     <section className="space-y-4">
-      <h2 className="text-xl font-semibold">Final teams</h2>
+      <span className="rule mb-2" />
+      <h2 className="headline text-2xl">Final teams</h2>
       <div className="grid gap-4 sm:grid-cols-2">
-        {[...teams.values()].map((members) => (
-          <Card key={members[0].team_id}>
+        {[...teams.values()].map((members) => {
+          const accent = bibColor(members[0].color_tag) ?? bibColor(members[0].team_name);
+          return (
+          <Card
+            key={members[0].team_id}
+            className="border-t-4"
+            style={accent ? { borderTopColor: accent } : undefined}
+          >
             <CardHeader className="pb-2">
-              <CardTitle>{members[0].team_name}</CardTitle>
+              <CardTitle className="headline flex items-center gap-2 text-xl">
+                {accent && (
+                  <span
+                    aria-hidden
+                    className="inline-block h-3 w-3 rounded-full border border-black/10"
+                    style={{ background: accent }}
+                  />
+                )}
+                {members[0].team_name}
+              </CardTitle>
               {members[0].color_tag && <CardDescription>{members[0].color_tag}</CardDescription>}
             </CardHeader>
             <CardContent>
@@ -70,7 +87,8 @@ export default function PublishedRosters({ sessionId }: { sessionId: string }) {
               </ul>
             </CardContent>
           </Card>
-        ))}
+          );
+        })}
       </div>
     </section>
   );

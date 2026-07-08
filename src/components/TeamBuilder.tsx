@@ -14,7 +14,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { AlertTriangle, Eye, EyeOff, Printer, Shuffle, Sparkles, Save } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { Player, Position, Session, Team, TeamAssignment } from '@/lib/types';
-import { cn } from '@/lib/utils';
+import { bibColor, cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
@@ -51,7 +51,7 @@ function PlayerCard({
       ref={setNodeRef}
       style={{ transform: CSS.Translate.toString(transform) }}
       className={cn(
-        'flex cursor-grab items-center gap-2 rounded-md border border-border bg-background p-2 text-sm shadow-sm touch-none',
+        'flex cursor-grab items-center gap-2 rounded-md border border-border bg-surface p-2 text-sm shadow-sm touch-none',
         isDragging && 'z-50 opacity-80 shadow-md',
       )}
       {...listeners}
@@ -86,25 +86,38 @@ function Column({
   title,
   subtitle,
   warning,
+  accent,
   children,
 }: {
   id: string;
   title: string;
   subtitle?: string;
   warning?: string;
+  accent?: string | null;
   children: React.ReactNode;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id });
   return (
     <div
       ref={setNodeRef}
+      style={accent ? { borderTopColor: accent } : undefined}
       className={cn(
-        'flex min-h-[220px] flex-col rounded-lg border border-border bg-muted/40 p-3 transition-colors',
-        isOver && 'border-primary bg-green-50',
+        'flex min-h-[220px] flex-col rounded-lg border border-border border-t-4 bg-surface/70 p-3 shadow-sm transition-colors',
+        !accent && 'border-t-border',
+        isOver && 'border-primary bg-green-50 border-t-primary',
       )}
     >
       <div className="mb-2">
-        <p className="font-semibold">{title}</p>
+        <p className="headline flex items-center gap-2 text-lg">
+          {accent && (
+            <span
+              aria-hidden
+              className="inline-block h-3 w-3 rounded-full border border-black/10"
+              style={{ background: accent }}
+            />
+          )}
+          {title}
+        </p>
         {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
         {warning && (
           <p className="mt-1 flex items-center gap-1 text-xs text-amber-700">
@@ -363,6 +376,7 @@ export default function TeamBuilder({ session, teams, players, assignments, onSa
                 key={t.id}
                 id={t.id}
                 title={t.name}
+                accent={bibColor(t.color_tag) ?? bibColor(t.name)}
                 subtitle={`${t.color_tag ? `${t.color_tag} · ` : ''}${members.length}/${session.players_per_team} players`}
                 warning={
                   over

@@ -58,7 +58,10 @@ export default function AdminSessions() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Sessions</h1>
+        <div>
+          <span className="rule mb-2" />
+          <h1 className="headline text-3xl">Sessions</h1>
+        </div>
         <Button
           onClick={() => {
             setEditing(null);

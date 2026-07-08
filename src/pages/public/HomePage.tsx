@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CalendarDays, MapPin, Users } from 'lucide-react';
+import { ArrowRight, CalendarDays, MapPin } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { Session } from '@/lib/types';
 import { formatDate } from '@/lib/utils';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 
 export default function HomePage() {
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -27,66 +27,96 @@ export default function HomePage() {
   const past = sessions.filter((s) => s.status !== 'open' && s.teams_published);
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-10">
-      <header className="mb-8 text-center">
-        <p className="text-sm font-semibold uppercase tracking-wide text-primary">OpenPlay</p>
-        <h1 className="mt-1 text-3xl font-bold">Football Open Play</h1>
-        <p className="mt-2 text-muted-foreground">Pick a session, register, pay, play.</p>
+    <main className="mx-auto max-w-2xl px-4 pb-16">
+      {/* Hero — matchday-programme masthead with a faint centre circle. */}
+      <header className="relative overflow-hidden py-14 text-center">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary/10"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary/10"
+        />
+        <p className="headline text-sm tracking-[0.3em] text-primary">⚽ OpenPlay</p>
+        <h1 className="headline mt-2 text-5xl leading-none sm:text-6xl">
+          Football
+          <br />
+          <span className="text-primary">Open Play</span>
+        </h1>
+        <p className="mx-auto mt-4 max-w-sm text-muted-foreground">
+          Pick a session. Claim your slot. Pay, show up, play.
+        </p>
       </header>
 
       {loading && <p className="text-center text-muted-foreground">Loading sessions…</p>}
 
       {!loading && open.length === 0 && (
-        <Card>
-          <CardContent className="py-10 text-center text-muted-foreground">
-            No open sessions right now. Check back soon.
-          </CardContent>
-        </Card>
+        <div className="rounded-lg border border-dashed border-border bg-surface/60 py-12 text-center text-muted-foreground">
+          No open sessions right now. Check back soon.
+        </div>
       )}
 
       <div className="space-y-4">
         {open.map((s) => {
           const slotsLeft = Math.max(0, s.max_players - s.registered_count);
           return (
-            <Link key={s.id} to={`/session/${s.id}`} className="block focus-visible:outline-none">
-              <Card className="transition-shadow hover:shadow-md">
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <CardTitle>{s.title}</CardTitle>
-                    <Badge variant={slotsLeft > 0 ? 'success' : 'warning'}>
+            <Link key={s.id} to={`/session/${s.id}`} className="group block focus-visible:outline-none">
+              <article className="relative overflow-hidden rounded-lg border border-border bg-surface shadow-[0_1px_2px_rgb(29_42_33/0.06),0_4px_12px_rgb(29_42_33/0.04)] transition-all group-hover:-translate-y-0.5 group-hover:shadow-[0_2px_4px_rgb(29_42_33/0.08),0_10px_24px_rgb(29_42_33/0.08)] group-focus-visible:ring-2 group-focus-visible:ring-primary">
+                <div className="absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-primary to-accent" />
+                <div className="p-5 pl-6">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h2 className="headline text-2xl leading-tight group-hover:text-primary">
+                        {s.title}
+                      </h2>
+                      <p className="mt-0.5 text-sm font-medium text-muted-foreground">
+                        {s.format} · {s.players_per_team} per team
+                      </p>
+                    </div>
+                    <Badge variant={slotsLeft > 0 ? 'success' : 'warning'} className="shrink-0">
                       {slotsLeft > 0 ? `${slotsLeft} slots left` : 'Waitlist'}
                     </Badge>
                   </div>
-                  <CardDescription>{s.format} · {s.players_per_team} per team</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-1 text-sm text-muted-foreground">
-                  <p className="flex items-center gap-2">
-                    <CalendarDays className="h-4 w-4" /> {formatDate(s.date)}
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4" /> {s.location}
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <Users className="h-4 w-4" /> {s.registered_count} / {s.max_players} registered
-                  </p>
-                </CardContent>
-              </Card>
+                  <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-1.5">
+                      <CalendarDays className="h-4 w-4 text-primary" /> {formatDate(s.date)}
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <MapPin className="h-4 w-4 text-primary" /> {s.location}
+                    </span>
+                  </div>
+                  <div className="mt-4 flex items-center gap-3">
+                    <Progress
+                      value={s.registered_count}
+                      max={s.max_players}
+                      label={`${s.registered_count} of ${s.max_players} slots taken`}
+                      className="flex-1"
+                    />
+                    <span className="text-xs font-semibold tabular-nums text-muted-foreground">
+                      {s.registered_count}/{s.max_players}
+                    </span>
+                    <ArrowRight className="h-4 w-4 text-primary transition-transform group-hover:translate-x-1" />
+                  </div>
+                </div>
+              </article>
             </Link>
           );
         })}
       </div>
 
       {past.length > 0 && (
-        <section className="mt-10">
-          <h2 className="mb-3 text-lg font-semibold">Recent sessions</h2>
+        <section className="mt-12">
+          <span className="rule mb-2" />
+          <h2 className="headline mb-3 text-xl">Recent sessions</h2>
           <div className="space-y-2">
             {past.map((s) => (
               <Link
                 key={s.id}
                 to={`/session/${s.id}`}
-                className="flex items-center justify-between rounded-md border border-border px-4 py-3 text-sm hover:bg-muted"
+                className="flex items-center justify-between rounded-md border border-border bg-surface px-4 py-3 text-sm transition-colors hover:border-primary/40"
               >
-                <span>{s.title}</span>
+                <span className="font-medium">{s.title}</span>
                 <span className="text-muted-foreground">{formatDate(s.date)}</span>
               </Link>
             ))}
@@ -94,8 +124,8 @@ export default function HomePage() {
         </section>
       )}
 
-      <footer className="mt-12 text-center text-xs text-muted-foreground">
-        <Link to="/admin" className="hover:underline">
+      <footer className="mt-14 text-center text-xs text-muted-foreground">
+        <Link to="/admin" className="hover:text-primary hover:underline">
           Organizer login
         </Link>
       </footer>

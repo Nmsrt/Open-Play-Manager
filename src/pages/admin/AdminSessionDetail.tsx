@@ -67,7 +67,7 @@ export default function AdminSessionDetail() {
       </Link>
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-bold">{session.title}</h1>
+        <h1 className="headline text-3xl">{session.title}</h1>
         <Badge variant={session.status === 'open' ? 'success' : 'secondary'}>{session.status}</Badge>
         {session.teams_published && <Badge variant="outline">teams live</Badge>}
         <p className="w-full text-sm text-muted-foreground">

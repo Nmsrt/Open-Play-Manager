@@ -1,24 +1,63 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #ffffff;
-  --color-foreground: #0f172a;
-  --color-muted: #f8fafc;
-  --color-muted-foreground: #64748b;
-  --color-border: #e2e8f0;
-  --color-primary: #15803d;
+  --font-sans: "Barlow", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Barlow Condensed", "Barlow", ui-sans-serif, sans-serif;
+
+  /* Dim, warm white base; pure-white surfaces lift off it. */
+  --color-background: #f4f4ef;
+  --color-surface: #ffffff;
+  --color-foreground: #1d2a21;
+  --color-muted: #eaeae2;
+  --color-muted-foreground: #5f6b62;
+  --color-border: #dedfd3;
+  --color-primary: #166534;
+  --color-primary-deep: #0f4a26;
   --color-primary-foreground: #ffffff;
-  --color-destructive: #dc2626;
+  --color-accent: #a3e635;
+  --color-destructive: #b91c1c;
   --color-destructive-foreground: #ffffff;
   --radius: 0.5rem;
 }
 
 body {
   @apply bg-background text-foreground antialiased;
+  /* Faint pitch-mow stripes — texture, not decoration you notice. */
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 72px,
+    rgb(22 101 52 / 0.03) 72px,
+    rgb(22 101 52 / 0.03) 144px
+  );
+}
+
+::selection {
+  background: var(--color-accent);
+  color: #14261a;
+}
+
+/* Jersey-style headline utility: condensed, tall, uppercase. */
+.headline {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  font-weight: 700;
+}
+
+/* Small green "kick-off" bar used above section titles. */
+.rule {
+  display: block;
+  width: 2rem;
+  height: 0.25rem;
+  background: linear-gradient(90deg, var(--color-primary) 60%, var(--color-accent) 60%);
 }
 
 @media print {
   .no-print {
     display: none !important;
+  }
+  body {
+    background-image: none;
   }
 }
