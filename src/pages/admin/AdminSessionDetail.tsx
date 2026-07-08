@@ -85,7 +85,7 @@ export default function AdminSessionDetail() {
         <TabsContent value="players">
           <PlayersTab sessionTitle={session.title} players={players} onChanged={load} />
         </TabsContent>
-        <TabsContent value="builder">
+        <TabsContent value="builder" className="space-y-4">
           <TeamsManager
             sessionId={session.id}
             teams={teams}

@@ -11,7 +11,7 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { AlertTriangle, Eye, EyeOff, Printer, Shuffle, Save } from 'lucide-react';
+import { AlertTriangle, Eye, EyeOff, Printer, Shuffle, Save, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { Player, Position, Session, Team, TeamAssignment } from '@/lib/types';
 import { bibColor, cn } from '@/lib/utils';
@@ -104,6 +104,7 @@ function Column({
   variant,
   count,
   targetSize,
+  onDelete,
   children,
 }: {
   id: string;
@@ -114,6 +115,7 @@ function Column({
   variant: 'pool' | 'team';
   count: number;
   targetSize?: number;
+  onDelete?: () => void;
   children: React.ReactNode;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id });
@@ -160,6 +162,16 @@ function Column({
             {count}
             {targetSize ? `/${targetSize}` : ''}
           </span>
+          {onDelete && (
+            <button
+              onClick={onDelete}
+              aria-label={`Delete team ${title}`}
+              title="Delete team"
+              className="shrink-0 rounded p-0.5 text-muted-foreground/70 hover:bg-destructive/10 hover:text-destructive"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          )}
         </p>
         {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
         {warning && (
@@ -332,6 +344,16 @@ export default function TeamBuilder({ session, teams, players, assignments, onSa
     onSaved();
   }
 
+  async function deleteTeam(team: Team) {
+    if (!confirm(`Delete "${team.name}"? Its player assignments will be removed.`)) return;
+    const { error } = await supabase.from('teams').delete().eq('id', team.id);
+    if (error) {
+      alert(`Could not delete team: ${error.message}`);
+      return;
+    }
+    onSaved();
+  }
+
   async function togglePublish() {
     const publishing = !session.teams_published;
     if (publishing && dirty) {
@@ -359,38 +381,25 @@ export default function TeamBuilder({ session, teams, players, assignments, onSa
   }
 
   return (
-    <div>
-      <div className="mb-4 flex flex-wrap items-center gap-2">
+    <div className="rounded-lg border border-border bg-surface p-4 shadow-sm">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="headline text-lg">Build lineups</h3>
+          <p className="text-xs text-muted-foreground">
+            Drag players from the Dugout onto a team, or auto-fill the pool below.
+          </p>
+        </div>
         <Button variant="outline" size="sm" onClick={shuffleEvenly}>
           <Shuffle className="h-4 w-4" /> Distribute pool evenly
         </Button>
-        <div className="ml-auto flex items-center gap-2">
-          {imbalanced && (
-            <span className="flex items-center gap-1 text-xs text-amber-700">
-              <AlertTriangle className="h-3.5 w-3.5" /> Teams look imbalanced
-            </span>
-          )}
-          <Link to={`/admin/session/${session.id}/print`}>
-            <Button variant="outline" size="sm">
-              <Printer className="h-4 w-4" /> Print
-            </Button>
-          </Link>
-          <Button variant="outline" size="sm" onClick={togglePublish}>
-            {session.teams_published ? (
-              <>
-                <EyeOff className="h-4 w-4" /> Unpublish
-              </>
-            ) : (
-              <>
-                <Eye className="h-4 w-4" /> Publish teams
-              </>
-            )}
-          </Button>
-          <Button size="sm" onClick={save} disabled={!dirty || saving}>
-            <Save className="h-4 w-4" /> {saving ? 'Saving…' : dirty ? 'Save changes' : 'Saved'}
-          </Button>
-        </div>
       </div>
+
+      {imbalanced && (
+        <p className="mb-3 flex items-center gap-1.5 rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          <AlertTriangle className="h-3.5 w-3.5 shrink-0" /> Teams look imbalanced — some have more
+          players than others.
+        </p>
+      )}
 
       <DndContext sensors={sensors} onDragEnd={onDragEnd}>
         <div
@@ -422,6 +431,7 @@ export default function TeamBuilder({ session, teams, players, assignments, onSa
                 targetSize={session.players_per_team}
                 accent={bibColor(t.color_tag) ?? bibColor(t.name)}
                 subtitle={t.color_tag || undefined}
+                onDelete={() => deleteTeam(t)}
                 warning={
                   over
                     ? `Over capacity (${members.length}/${session.players_per_team})`
@@ -449,6 +459,28 @@ export default function TeamBuilder({ session, teams, players, assignments, onSa
         🤝 marks players with a squad request — hover the icon to read it (full text also in the
         Players tab).
       </p>
+
+      <div className="mt-4 flex flex-wrap items-center justify-end gap-2 border-t border-border pt-4">
+        <Link to={`/admin/session/${session.id}/print`}>
+          <Button variant="outline" size="sm">
+            <Printer className="h-4 w-4" /> Print
+          </Button>
+        </Link>
+        <Button variant="outline" size="sm" onClick={togglePublish}>
+          {session.teams_published ? (
+            <>
+              <EyeOff className="h-4 w-4" /> Unpublish
+            </>
+          ) : (
+            <>
+              <Eye className="h-4 w-4" /> Publish teams
+            </>
+          )}
+        </Button>
+        <Button size="sm" onClick={save} disabled={!dirty || saving}>
+          <Save className="h-4 w-4" /> {saving ? 'Saving…' : dirty ? 'Save changes' : 'Saved'}
+        </Button>
+      </div>
     </div>
   );
 }
