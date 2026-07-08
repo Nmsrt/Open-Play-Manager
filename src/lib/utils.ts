@@ -28,7 +28,10 @@ export function bibColor(tag: string | null | undefined): string | null {
 
 // Venue cover photos, matched against the free-text session location.
 // Drop the image in public/covers/ and add a pattern here.
-const LOCATION_COVERS: Array<[RegExp, string]> = [[/parqal/i, '/covers/parqal.jpg']];
+const LOCATION_COVERS: Array<[RegExp, string]> = [
+  [/parqal/i, '/covers/parqal.jpg'],
+  [/vermosa/i, '/covers/vermosa.jpg'],
+];
 
 export function locationCover(location: string | null | undefined): string | null {
   if (!location) return null;
