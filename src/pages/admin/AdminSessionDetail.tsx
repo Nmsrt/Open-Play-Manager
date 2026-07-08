@@ -80,7 +80,7 @@ export default function AdminSessionDetail() {
         <div className="relative p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <h1 className="headline text-3xl leading-tight">{session.title}</h1>
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="flex shrink-0 flex-col items-end gap-1.5">
               <Badge variant={session.status === 'open' ? 'success' : 'secondary'}>{session.status}</Badge>
               <span
                 className="inline-flex items-center gap-1.5 text-xs text-white/80"
