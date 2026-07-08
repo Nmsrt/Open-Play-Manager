@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Pencil } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { Session, SessionStatus } from '@/lib/types';
-import { formatDate } from '@/lib/utils';
+import { formatDateParts } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -34,6 +34,7 @@ const nextActions: Record<SessionStatus, { label: string; to: SessionStatus }[]>
 };
 
 export default function AdminSessions() {
+  const navigate = useNavigate();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -91,52 +92,67 @@ export default function AdminSessions() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sessions.map((s) => (
-              <TableRow key={s.id}>
-                <TableCell>
-                  <Link to={`/admin/session/${s.id}`} className="font-medium text-primary hover:underline">
-                    {s.title}
-                  </Link>
-                  <p className="text-xs text-muted-foreground">{s.location}</p>
-                </TableCell>
-                <TableCell className="whitespace-nowrap">{formatDate(s.date)}</TableCell>
-                <TableCell className="whitespace-nowrap">
-                  {s.format}
-                  <p className="text-xs text-muted-foreground">
-                    {s.players_per_team}/team · {s.team_count} teams
-                  </p>
-                </TableCell>
-                <TableCell>
-                  {s.registered_count}/{s.max_players}
-                </TableCell>
-                <TableCell>
-                  <Badge variant={statusVariant[s.status]}>{s.status}</Badge>
-                  {s.teams_published && (
-                    <Badge variant="outline" className="ml-1">
-                      teams live
-                    </Badge>
-                  )}
-                </TableCell>
-                <TableCell className="space-x-1 whitespace-nowrap text-right">
-                  {nextActions[s.status].map((a) => (
-                    <Button key={a.to} size="sm" variant="outline" onClick={() => setStatus(s, a.to)}>
-                      {a.label}
+            {sessions.map((s) => {
+              const { weekday, date, time } = formatDateParts(s.date);
+              return (
+                <TableRow
+                  key={s.id}
+                  onClick={() => navigate(`/admin/session/${s.id}`)}
+                  className="cursor-pointer"
+                >
+                  <TableCell>
+                    <p className="font-medium text-primary">{s.title}</p>
+                    <p className="text-xs text-muted-foreground">{s.location}</p>
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    <p>
+                      {weekday}, {date}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{time}</p>
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {s.format}
+                    <p className="text-xs text-muted-foreground">{s.team_count} teams</p>
+                  </TableCell>
+                  <TableCell>
+                    {s.registered_count}/{s.max_players}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col items-start gap-1">
+                      <Badge variant={statusVariant[s.status]}>{s.status}</Badge>
+                      {s.teams_published && <Badge variant="outline">teams live</Badge>}
+                    </div>
+                  </TableCell>
+                  <TableCell className="space-x-1 whitespace-nowrap text-right">
+                    {nextActions[s.status].map((a) => (
+                      <Button
+                        key={a.to}
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setStatus(s, a.to);
+                        }}
+                      >
+                        {a.label}
+                      </Button>
+                    ))}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      aria-label={`Edit ${s.title}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditing(s);
+                        setDialogOpen(true);
+                      }}
+                    >
+                      <Pencil className="h-4 w-4" />
                     </Button>
-                  ))}
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    aria-label={`Edit ${s.title}`}
-                    onClick={() => {
-                      setEditing(s);
-                      setDialogOpen(true);
-                    }}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       )}
