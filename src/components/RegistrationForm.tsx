@@ -32,19 +32,11 @@ function FieldError({ message }: { message?: string }) {
   );
 }
 
-const POSITION_BLURBS: Record<Position, string> = {
-  GK: 'Keeper — the last wall 🧤',
-  DEF: 'Defender — nothing gets past you 🛡️',
-  MID: 'Midfielder — the engine room 🔋',
-  FWD: 'Striker — goals, goals, goals ⚽',
-  ANY: "Anywhere — coach's call 🎲",
-};
-
-const PITCH_SPOTS: Array<{ pos: Position; label: string; top: string }> = [
-  { pos: 'FWD', label: 'Striker', top: '16%' },
-  { pos: 'MID', label: 'Midfield', top: '44%' },
-  { pos: 'DEF', label: 'Defence', top: '68%' },
-  { pos: 'GK', label: 'Keeper', top: '88%' },
+const PITCH_SPOTS: Array<{ pos: Position; label: string }> = [
+  { pos: 'FWD', label: 'Striker' },
+  { pos: 'MID', label: 'Midfield' },
+  { pos: 'DEF', label: 'Defence' },
+  { pos: 'GK', label: 'Keeper' },
 ];
 
 // Literal Tailwind classes (not interpolated) so each position keeps its own
@@ -89,7 +81,7 @@ function PitchPositionPicker({
   return (
     <div role="radiogroup" aria-label="Preferred position">
       <div
-        className="relative mx-auto aspect-[3/4] w-full max-w-[260px] overflow-hidden rounded-xl border-4 border-white shadow-md"
+        className="relative mx-auto flex aspect-[3/4] w-full max-w-[260px] flex-col justify-between overflow-hidden rounded-xl border-4 border-white p-5 shadow-md"
         style={{
           background:
             'repeating-linear-gradient(0deg, #15803d 0 12.5%, #16893f 12.5% 25%)',
@@ -111,7 +103,7 @@ function PitchPositionPicker({
           className="absolute bottom-2 left-1/2 h-7 w-20 -translate-x-1/2 border-2 border-b-0 border-white/50"
         />
 
-        {PITCH_SPOTS.map(({ pos, label, top }) => {
+        {PITCH_SPOTS.map(({ pos, label }) => {
           const selected = value === pos;
           return (
             <button
@@ -120,8 +112,7 @@ function PitchPositionPicker({
               role="radio"
               aria-checked={selected}
               onClick={() => onChange(pos)}
-              className="absolute left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 focus-visible:outline-none"
-              style={{ top }}
+              className="relative z-10 mx-auto flex flex-col items-center gap-1 focus-visible:outline-none"
             >
               <span
                 className={cn(
@@ -163,10 +154,6 @@ function PitchPositionPicker({
       >
         🎲 Put me anywhere
       </button>
-
-      <p aria-live="polite" className="mt-2 text-center text-sm font-medium text-primary">
-        {POSITION_BLURBS[value]}
-      </p>
     </div>
   );
 }
