@@ -39,13 +39,18 @@ export function locationCover(location: string | null | undefined): string | nul
   return null;
 }
 
+// Weekday, calendar date, and time as three separate strings so callers can
+// lay them out with clear breaks instead of one comma-run-on blob.
+export function formatDateParts(iso: string) {
+  const d = new Date(iso);
+  return {
+    weekday: d.toLocaleDateString(undefined, { weekday: 'short' }),
+    date: d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }),
+    time: d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }),
+  };
+}
+
 export function formatDate(iso: string) {
-  return new Date(iso).toLocaleString(undefined, {
-    weekday: 'short',
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  });
+  const { weekday, date, time } = formatDateParts(iso);
+  return `${weekday}, ${date}  ·  ${time}`;
 }

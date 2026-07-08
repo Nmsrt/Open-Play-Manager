@@ -6,6 +6,7 @@ import type { Session } from '@/lib/types';
 import { formatDate } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import SessionDateTime from '@/components/SessionDateTime';
 
 export default function HomePage() {
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -79,12 +80,13 @@ export default function HomePage() {
                       {slotsLeft > 0 ? `${slotsLeft} slots left` : 'Waitlist'}
                     </Badge>
                   </div>
-                  <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted-foreground">
+                  <div className="mt-3 space-y-1 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1.5">
-                      <CalendarDays className="h-4 w-4 text-primary" /> {formatDate(s.date)}
+                      <CalendarDays className="h-4 w-4 shrink-0 text-primary" />
+                      <SessionDateTime iso={s.date} />
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <MapPin className="h-4 w-4 text-primary" /> {s.location}
+                      <MapPin className="h-4 w-4 shrink-0 text-primary" /> {s.location}
                     </span>
                   </div>
                   <div className="mt-4 flex items-center gap-3">

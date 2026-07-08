@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import RegistrationForm from '@/components/RegistrationForm';
 import PublishedRosters from '@/components/PublishedRosters';
+import SessionDateTime from '@/components/SessionDateTime';
 
 type Registered = { status: PlayerStatus; values: RegistrationInput };
 
@@ -118,7 +119,8 @@ export default function SessionPage() {
           </div>
           <div className="mt-4 space-y-1.5 text-sm text-white/85">
             <p className="flex items-center gap-2">
-              <CalendarDays className="h-4 w-4 text-accent" /> {formatDate(session.date)}
+              <CalendarDays className="h-4 w-4 shrink-0 text-accent" />
+              <SessionDateTime iso={session.date} dividerClassName="text-accent" />
             </p>
             <p className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-accent" /> {session.location}
