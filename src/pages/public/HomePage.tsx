@@ -28,24 +28,26 @@ export default function HomePage() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 pb-16">
-      {/* Hero — matchday-programme masthead with a faint centre circle,
-          set on a translucent card so it stays legible over the photo. */}
-      <header className="relative mt-6 mb-8 overflow-hidden rounded-xl border border-border bg-surface/90 py-14 text-center shadow-sm backdrop-blur-sm">
+      {/* Hero — matchday-programme masthead with a faint centre circle.
+          Text shadow (not a card) keeps it legible over the photo. */}
+      <header className="relative mt-6 mb-8 overflow-hidden py-14 text-center">
         <div
           aria-hidden
-          className="pointer-events-none absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary/10"
+          className="pointer-events-none absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary/20"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary/10"
+          className="pointer-events-none absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary/20"
         />
-        <p className="headline text-sm tracking-[0.3em] text-primary">⚽ OpenPlay</p>
-        <h1 className="headline mt-2 text-5xl leading-none sm:text-6xl">
+        <p className="headline text-sm tracking-[0.3em] text-primary drop-shadow-[0_1px_2px_rgba(255,255,255,0.8)]">
+          ⚽ OpenPlay
+        </p>
+        <h1 className="headline mt-2 text-5xl leading-none drop-shadow-[0_2px_4px_rgba(255,255,255,0.8)] sm:text-6xl">
           Football
           <br />
           <span className="text-primary">Open Play</span>
         </h1>
-        <p className="mx-auto mt-4 max-w-sm text-muted-foreground">
+        <p className="mx-auto mt-4 max-w-sm text-muted-foreground drop-shadow-[0_1px_2px_rgba(255,255,255,0.8)]">
           Pick a session. Claim your slot. Pay, show up, play.
         </p>
       </header>
