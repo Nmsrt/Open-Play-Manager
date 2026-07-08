@@ -295,7 +295,7 @@ export default function RegistrationForm({ session, isFull, onSuccess }: Props) 
             id="teammate_requests"
             className="mt-1"
             rows={2}
-            placeholder="e.g. Put me with Miguel and Carlo — we carpool"
+            placeholder="e.g. Put me with Messi and Ronaldo"
             {...register('teammate_requests')}
           />
           <p className="mt-1 text-xs text-muted-foreground">
