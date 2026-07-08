@@ -47,14 +47,35 @@ const PITCH_SPOTS: Array<{ pos: Position; label: string; top: string }> = [
   { pos: 'GK', label: 'Keeper', top: '88%' },
 ];
 
-// Literal Tailwind classes (not interpolated) so each position gets its own
-// hover tint on the mini pitch — Striker warms red, Midfield cools blue, etc.
-const POSITION_HOVER_CLASSES: Record<Position, string> = {
-  FWD: 'hover:border-red-200 hover:bg-red-400/50',
-  MID: 'hover:border-sky-200 hover:bg-sky-400/50',
-  DEF: 'hover:border-amber-200 hover:bg-amber-400/50',
-  GK: 'hover:border-violet-200 hover:bg-violet-400/50',
-  ANY: 'hover:border-white hover:bg-white/30',
+// Literal Tailwind classes (not interpolated) so each position keeps its own
+// color on the mini pitch — Striker red, Midfield sky, Defence amber, Keeper
+// violet — for both the hover preview and the confirmed selected state.
+const POSITION_COLOR_CLASSES: Record<Position, { hover: string; selected: string; label: string }> = {
+  FWD: {
+    hover: 'hover:border-red-200 hover:bg-red-400/50',
+    selected: 'scale-110 border-white bg-red-500 text-white shadow-lg ring-4 ring-red-300/50',
+    label: 'bg-white text-red-700',
+  },
+  MID: {
+    hover: 'hover:border-sky-200 hover:bg-sky-400/50',
+    selected: 'scale-110 border-white bg-sky-500 text-white shadow-lg ring-4 ring-sky-300/50',
+    label: 'bg-white text-sky-700',
+  },
+  DEF: {
+    hover: 'hover:border-amber-200 hover:bg-amber-400/50',
+    selected: 'scale-110 border-white bg-amber-500 text-white shadow-lg ring-4 ring-amber-300/50',
+    label: 'bg-white text-amber-700',
+  },
+  GK: {
+    hover: 'hover:border-violet-200 hover:bg-violet-400/50',
+    selected: 'scale-110 border-white bg-violet-500 text-white shadow-lg ring-4 ring-violet-300/50',
+    label: 'bg-white text-violet-700',
+  },
+  ANY: {
+    hover: 'hover:border-white hover:bg-white/30',
+    selected: 'scale-110 border-white bg-accent text-green-950 shadow-lg ring-4 ring-white/40',
+    label: 'bg-white text-green-900',
+  },
 };
 
 /** Tap-your-spot mini pitch: pick a position by standing on it. */
@@ -106,10 +127,10 @@ function PitchPositionPicker({
                 className={cn(
                   'flex h-12 w-12 items-center justify-center rounded-full border-2 text-sm font-bold transition-all',
                   selected
-                    ? 'scale-110 border-white bg-accent text-green-950 shadow-lg ring-4 ring-white/40'
+                    ? POSITION_COLOR_CLASSES[pos].selected
                     : cn(
                         'border-white/70 bg-white/15 text-white backdrop-blur-[1px] hover:scale-110 hover:text-white hover:shadow-md',
-                        POSITION_HOVER_CLASSES[pos],
+                        POSITION_COLOR_CLASSES[pos].hover,
                       ),
                 )}
               >
@@ -118,7 +139,7 @@ function PitchPositionPicker({
               <span
                 className={cn(
                   'rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide transition-colors',
-                  selected ? 'bg-white text-green-900' : 'text-white/90',
+                  selected ? POSITION_COLOR_CLASSES[pos].label : 'text-white/90',
                 )}
               >
                 {label}
