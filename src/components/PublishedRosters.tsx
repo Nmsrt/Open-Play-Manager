@@ -4,7 +4,13 @@ import { bibColor } from '@/lib/utils';
 import type { PublicRosterRow } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
-export default function PublishedRosters({ sessionId }: { sessionId: string }) {
+export default function PublishedRosters({
+  sessionId,
+  hideTitle = false,
+}: {
+  sessionId: string;
+  hideTitle?: boolean;
+}) {
   const [rows, setRows] = useState<PublicRosterRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -35,8 +41,9 @@ export default function PublishedRosters({ sessionId }: { sessionId: string }) {
     };
   }, [sessionId]);
 
-  if (loading) return <p className="text-center text-muted-foreground">Loading teams…</p>;
-  if (rows.length === 0) return null;
+  if (loading) return <p className="py-4 text-center text-muted-foreground">Loading teams…</p>;
+  if (rows.length === 0)
+    return <p className="py-4 text-center text-muted-foreground">Teams haven't been posted yet.</p>;
 
   const teams = new Map<string, PublicRosterRow[]>();
   for (const row of rows) {
@@ -47,8 +54,12 @@ export default function PublishedRosters({ sessionId }: { sessionId: string }) {
 
   return (
     <section className="space-y-4">
-      <span className="rule mb-2" />
-      <h2 className="headline text-2xl">Final teams</h2>
+      {!hideTitle && (
+        <>
+          <span className="rule mb-2" />
+          <h2 className="headline text-2xl">Final teams</h2>
+        </>
+      )}
       <div className="grid gap-4 sm:grid-cols-2">
         {[...teams.values()].map((members) => {
           const accent = bibColor(members[0].color_tag) ?? bibColor(members[0].team_name);

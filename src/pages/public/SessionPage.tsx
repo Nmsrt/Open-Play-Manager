@@ -6,6 +6,7 @@ import type { Session, PlayerStatus } from '@/lib/types';
 import type { RegistrationInput } from '@/lib/validation';
 import { formatDate } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import RegistrationForm from '@/components/RegistrationForm';
 import PublishedRosters from '@/components/PublishedRosters';
 
@@ -16,6 +17,7 @@ export default function SessionPage() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [registered, setRegistered] = useState<Registered | null>(null);
+  const [teamsOpen, setTeamsOpen] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -115,9 +117,7 @@ export default function SessionPage() {
           {session.description && <p className="mt-3 text-sm text-white/75">{session.description}</p>}
           {session.teams_published && (
             <button
-              onClick={() =>
-                document.getElementById('final-teams')?.scrollIntoView({ behavior: 'smooth' })
-              }
+              onClick={() => setTeamsOpen(true)}
               className="headline mt-4 inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-base tracking-wide text-green-950 shadow-md transition-transform hover:scale-[1.02] active:translate-y-px"
             >
               <Shirt className="h-4 w-4" /> View final teams
@@ -143,11 +143,14 @@ export default function SessionPage() {
         </div>
       </section>
 
-      {session.teams_published && (
-        <div id="final-teams" className="mb-8 scroll-mt-4">
-          <PublishedRosters sessionId={session.id} />
-        </div>
-      )}
+      <Dialog open={teamsOpen} onOpenChange={setTeamsOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="headline text-2xl">Final teams</DialogTitle>
+          </DialogHeader>
+          {session.teams_published && <PublishedRosters sessionId={session.id} hideTitle />}
+        </DialogContent>
+      </Dialog>
 
       {registered ? (
         // Ticket-style confirmation, like a matchday pass.
