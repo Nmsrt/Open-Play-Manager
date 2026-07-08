@@ -247,119 +247,127 @@ export default function RegistrationForm({ session, isFull, onSuccess }: Props) 
         </div>
       )}
 
-      <fieldset className="space-y-4 rounded-lg border border-border bg-surface/90 p-4 shadow-sm backdrop-blur-sm">
-        <legend className="headline px-2 text-lg">Your details</legend>
-        <div>
-          <Label htmlFor="full_name">Full name</Label>
-          <Input id="full_name" className="mt-1" autoComplete="name" {...register('full_name')} />
-          <FieldError message={errors.full_name?.message} />
-        </div>
-        <div>
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" className="mt-1" autoComplete="email" {...register('email')} />
-          <FieldError message={errors.email?.message} />
-        </div>
-      </fieldset>
-
-      <fieldset className="space-y-4 rounded-lg border border-border bg-surface/90 p-4 shadow-sm backdrop-blur-sm">
-        <legend className="headline px-2 text-lg">On the pitch</legend>
-        <div>
-          <Label>Where do you play?</Label>
-          <div className="mt-2">
-            <PitchPositionPicker
-              value={position}
-              onChange={(p) => setValue('preferred_position', p)}
-            />
-          </div>
-        </div>
-
-        <div>
-          <Label>Skill level</Label>
-          <div className="mt-2 grid grid-cols-3 gap-2" role="radiogroup" aria-label="Skill level">
-            {SKILL_OPTIONS.map((opt) => {
-              const selected = skill === opt.value;
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  role="radio"
-                  aria-checked={selected}
-                  onClick={() => setValue('skill_level', opt.value, { shouldValidate: true })}
-                  className={cn(
-                    'flex flex-col items-center rounded-lg border px-2 py-3 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-                    selected
-                      ? 'scale-[1.03] border-primary bg-primary text-primary-foreground shadow-sm'
-                      : 'border-border bg-surface hover:border-primary/50 hover:bg-muted/50',
-                  )}
-                >
-                  <span className={cn('text-base leading-none', selected ? 'text-accent' : 'text-amber-500')}>
-                    {opt.stars}
-                  </span>
-                  <span className="mt-1 text-sm font-bold">{opt.label}</span>
-                  <span className={cn('text-[11px]', selected ? 'text-white/80' : 'text-muted-foreground')}>
-                    {opt.blurb}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-          <FieldError message={errors.skill_level?.message} />
-        </div>
-      </fieldset>
-
-      <fieldset className="space-y-4 rounded-lg border border-border bg-surface/90 p-4 shadow-sm backdrop-blur-sm">
-        <legend className="headline px-2 text-lg">Squad &amp; notes</legend>
-        <div>
-          <Label htmlFor="teammate_requests">Squad requests 🤝 (optional)</Label>
-          <Textarea
-            id="teammate_requests"
-            className="mt-1"
-            rows={2}
-            placeholder="e.g. Put me with Messi and Ronaldo"
-            {...register('teammate_requests')}
-          />
-          <p className="mt-1 text-xs text-muted-foreground">
-            Want to play alongside (or against!) someone? Tell the organizer — final teams are
-            their call.
-          </p>
-          <FieldError message={errors.teammate_requests?.message} />
-        </div>
-
-        <div>
-          <Label htmlFor="notes">Notes (optional)</Label>
-          <Textarea id="notes" className="mt-1" rows={2} {...register('notes')} />
-          <FieldError message={errors.notes?.message} />
-        </div>
-      </fieldset>
-
-      <fieldset className="space-y-4 rounded-lg border border-border bg-surface/90 p-4 shadow-sm backdrop-blur-sm">
-        <legend className="headline px-2 text-lg">
-          Payment{session.fee_amount > 0 ? ` — ₱${session.fee_amount}` : ''}
-        </legend>
-        <div>
-          <Label htmlFor="method">Method</Label>
-          <Select id="method" className="mt-1" {...register('method')}>
-            {PAYMENT_METHODS.map((m) => (
-              <option key={m} value={m}>
-                {m === 'gcash' ? 'GCash' : m === 'maya' ? 'Maya' : m[0].toUpperCase() + m.slice(1)}
-              </option>
-            ))}
-          </Select>
-        </div>
-        {method !== 'cash' && (
+      <div className="rounded-lg border border-border bg-surface/90 p-4 shadow-sm backdrop-blur-sm">
+        <h3 className="headline mb-3 text-lg">Your details</h3>
+        <div className="space-y-4">
           <div>
-            <Label htmlFor="proof">Proof of payment (screenshot, up to 5 MB)</Label>
-            <Input
-              id="proof"
-              type="file"
-              accept={PROOF_MIME_TYPES.join(',')}
-              className="mt-1"
-              onChange={handleProofChange}
-            />
-            <FieldError message={proofError} />
+            <Label htmlFor="full_name">Full name</Label>
+            <Input id="full_name" className="mt-1" autoComplete="name" {...register('full_name')} />
+            <FieldError message={errors.full_name?.message} />
           </div>
-        )}
-      </fieldset>
+          <div>
+            <Label htmlFor="email">Email</Label>
+            <Input id="email" type="email" className="mt-1" autoComplete="email" {...register('email')} />
+            <FieldError message={errors.email?.message} />
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-border bg-surface/90 p-4 shadow-sm backdrop-blur-sm">
+        <h3 className="headline mb-3 text-lg">On the pitch</h3>
+        <div className="space-y-4">
+          <div>
+            <Label>Where do you play?</Label>
+            <div className="mt-2">
+              <PitchPositionPicker
+                value={position}
+                onChange={(p) => setValue('preferred_position', p)}
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label>Skill level</Label>
+            <div className="mt-2 grid grid-cols-3 gap-2" role="radiogroup" aria-label="Skill level">
+              {SKILL_OPTIONS.map((opt) => {
+                const selected = skill === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => setValue('skill_level', opt.value, { shouldValidate: true })}
+                    className={cn(
+                      'flex flex-col items-center rounded-lg border px-2 py-3 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+                      selected
+                        ? 'scale-[1.03] border-primary bg-primary text-primary-foreground shadow-sm'
+                        : 'border-border bg-surface hover:border-primary/50 hover:bg-muted/50',
+                    )}
+                  >
+                    <span className={cn('text-base leading-none', selected ? 'text-accent' : 'text-amber-500')}>
+                      {opt.stars}
+                    </span>
+                    <span className="mt-1 text-sm font-bold">{opt.label}</span>
+                    <span className={cn('text-[11px]', selected ? 'text-white/80' : 'text-muted-foreground')}>
+                      {opt.blurb}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <FieldError message={errors.skill_level?.message} />
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-border bg-surface/90 p-4 shadow-sm backdrop-blur-sm">
+        <h3 className="headline mb-3 text-lg">Squad &amp; notes</h3>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="teammate_requests">Squad requests 🤝 (optional)</Label>
+            <Textarea
+              id="teammate_requests"
+              className="mt-1"
+              rows={2}
+              placeholder="e.g. Put me with Messi and Ronaldo"
+              {...register('teammate_requests')}
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Want to play alongside (or against!) someone? Tell the organizer — final teams are
+              their call.
+            </p>
+            <FieldError message={errors.teammate_requests?.message} />
+          </div>
+
+          <div>
+            <Label htmlFor="notes">Notes (optional)</Label>
+            <Textarea id="notes" className="mt-1" rows={2} {...register('notes')} />
+            <FieldError message={errors.notes?.message} />
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-border bg-surface/90 p-4 shadow-sm backdrop-blur-sm">
+        <h3 className="headline mb-3 text-lg">
+          Payment{session.fee_amount > 0 ? ` — ₱${session.fee_amount}` : ''}
+        </h3>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="method">Method</Label>
+            <Select id="method" className="mt-1" {...register('method')}>
+              {PAYMENT_METHODS.map((m) => (
+                <option key={m} value={m}>
+                  {m === 'gcash' ? 'GCash' : m === 'maya' ? 'Maya' : m[0].toUpperCase() + m.slice(1)}
+                </option>
+              ))}
+            </Select>
+          </div>
+          {method !== 'cash' && (
+            <div>
+              <Label htmlFor="proof">Proof of payment (screenshot, up to 5 MB)</Label>
+              <Input
+                id="proof"
+                type="file"
+                accept={PROOF_MIME_TYPES.join(',')}
+                className="mt-1"
+                onChange={handleProofChange}
+              />
+              <FieldError message={proofError} />
+            </div>
+          )}
+        </div>
+      </div>
 
       {serverError && (
         <p role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-destructive">
