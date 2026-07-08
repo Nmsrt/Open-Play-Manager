@@ -4,6 +4,14 @@ import { supabase } from '@/lib/supabase';
 import type { Team } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 
 const BIB_SUGGESTIONS = ['Red Bibs', 'Blue Bibs', 'Yellow Bibs', 'Green Bibs', 'Orange Bibs', 'White Bibs'];
 
@@ -18,6 +26,7 @@ interface Props {
  * happens from its column header in the builder below, not here — keeping
  * one place for destructive actions instead of duplicating the control. */
 export default function TeamsManager({ sessionId, teams, teamCount, onChanged }: Props) {
+  const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [color, setColor] = useState('');
   const [busy, setBusy] = useState(false);
@@ -39,6 +48,7 @@ export default function TeamsManager({ sessionId, teams, teamCount, onChanged }:
     }
     setName('');
     setColor('');
+    setOpen(false);
     onChanged();
   }
 
@@ -74,23 +84,49 @@ export default function TeamsManager({ sessionId, teams, teamCount, onChanged }:
         </p>
       )}
 
-      <div className="mt-3 flex flex-wrap gap-2">
-        <Input
-          placeholder="Team name (e.g. Red Bibs)"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="h-9 w-48"
-        />
-        <Input
-          placeholder="Bib/pinnie color (optional)"
-          value={color}
-          onChange={(e) => setColor(e.target.value)}
-          className="h-9 w-48"
-        />
-        <Button size="sm" variant="outline" onClick={() => addTeam()} disabled={busy || !name.trim()}>
-          <Plus className="h-4 w-4" /> Add team
-        </Button>
-      </div>
+      <Button size="sm" variant="outline" className="mt-3" onClick={() => setOpen(true)}>
+        <Plus className="h-4 w-4" /> Create team
+      </Button>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="headline text-xl">Create team</DialogTitle>
+            <DialogDescription>Give it a name and, optionally, a bib/pinnie color.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="team-name">Team name</Label>
+              <Input
+                id="team-name"
+                placeholder="e.g. Red Bibs"
+                className="mt-1"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <div>
+              <Label htmlFor="team-color">Bib/pinnie color (optional)</Label>
+              <Input
+                id="team-color"
+                placeholder="e.g. Red"
+                className="mt-1"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="button" onClick={() => addTeam()} disabled={busy || !name.trim()}>
+                {busy ? 'Creating…' : 'Create team'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
