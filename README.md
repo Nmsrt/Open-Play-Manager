@@ -1,72 +1,145 @@
-# OpenPlay
+<div align="center">
 
-Football open-play session manager. Two surfaces:
+<!-- Replace with your project logo or banner -->
+<img src="https://via.placeholder.com/120x120.png?text=LOGO" alt="Project Logo" width="120" height="120" />
 
-- **Public** (`/`, `/session/:id`) — no login. Players see open sessions with a live slot
-  counter, register (name, contact, position, skill, team preference), submit payment
-  details with optional proof image, and view published team rosters.
-- **Admin** (`/admin`) — Supabase Auth login. Create/manage sessions, review registrants,
-  verify/reject payments, drag-and-drop players into teams, publish rosters, print them.
+<h1>OpenPlay</h1>
 
-Static SPA: Vite + React + TypeScript + Tailwind + `@supabase/supabase-js`. No server
-runtime — **Supabase RLS is the security boundary**, not the React routes.
+<p><em>Football open-play session manager — a static SPA for running pickup/open-play sessions, built with React, TypeScript, and Supabase.</em></p>
 
-## Session formats
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-2.0.0-green.svg)](https://github.com/Nmsrt/Open-Play-Manager/releases)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/Nmsrt/Open-Play-Manager/ci.yml?branch=main)](https://github.com/Nmsrt/Open-Play-Manager/actions)
+[![Issues](https://img.shields.io/github/issues/Nmsrt/Open-Play-Manager)](https://github.com/Nmsrt/Open-Play-Manager/issues)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
+</div>
+
+---
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+- [Session Formats](#session-formats)
+- [Security Model](#security-model)
+  - [Verifying RLS from outside the app](#verifying-rls-from-outside-the-app)
+- [Deploy](#deploy)
+- [Project Structure](#project-structure)
+- [Not Implemented](#not-implemented)
+- [License](#license)
+- [Contact](#contact)
+
+---
+
+## Overview
+
+OpenPlay is a static single-page app for managing football (soccer) open-play sessions. It
+has two surfaces: a public side where players see open sessions, register, and submit
+payment proof; and an admin side where staff verify payments, drag-and-drop players into
+balanced teams, and publish/print rosters.
+
+There is **no server runtime** — all business logic that needs to be trusted (capacity
+checks, waitlist placement, payment verification, admin membership) lives in Postgres via
+Supabase RLS policies, check constraints, and security-definer RPCs/triggers. The React app
+is treated as fully public, untrusted client code.
+
+---
+
+## Features
+
+- ✅ **Public session browsing** — Live slot counter, no login required.
+- ✅ **Player registration** — Name, contact, position, skill, team preference; optional
+  payment proof image upload.
+- ✅ **Admin dashboard** — Supabase Auth login; create/manage sessions, review registrants.
+- ✅ **Payment verification** — Admins verify or reject submitted payments before a player
+  is confirmed.
+- ✅ **Drag-and-drop team builder** — Assign players into balanced teams (`dnd-kit`).
+- ✅ **Published rosters** — Publish and print final team rosters for players to view.
+- ✅ **Data-driven session sizing** — Format, players-per-team, and team count are columns,
+  not hardcoded assumptions.
+- 🔜 **Email notifications** — Registration confirmation / waitlist promotion (needs an
+  edge function).
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Language | [TypeScript](https://www.typescriptlang.org/) |
+| Framework | [React 18](https://react.dev/) |
+| Build tool | [Vite 6](https://vitejs.dev/) |
+| Styling | [Tailwind CSS 4](https://tailwindcss.com/) |
+| Backend | [Supabase](https://supabase.com/) (Postgres, Auth, Storage, RLS) |
+| Forms/validation | `react-hook-form` + `zod` |
+| Drag-and-drop | `@dnd-kit` |
+| UI primitives | `@radix-ui` (local wrappers in `src/components/ui/`) |
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) `>= 18`
+- A [Supabase](https://supabase.com/) project (hosted, or `supabase init && supabase start` locally)
+
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/Nmsrt/Open-Play-Manager.git
+   cd Open-Play-Manager
+   ```
+
+2. **Create the Supabase project and apply the migration:**
+   - Create a project at [supabase.com](https://supabase.com), or run Supabase locally.
+   - Apply `supabase/migrations/0001_init.sql` — hosted: paste into the SQL editor or
+     `supabase link --project-ref <ref> && supabase db push`; local: `supabase db reset`
+     picks it up automatically.
+
+3. **Disable public sign-ups** — Dashboard → **Authentication → Sign In / Up → disable
+   "Allow new users to sign up"**. Only the single admin account you create manually should
+   exist. Also configure **Authentication → Rate Limits** to throttle failed logins.
+
+4. **Create the shared staff account** — staff sign in with one shared password, backed by
+   a single real Supabase Auth account (keeps `auth.uid()` as the actual RLS boundary):
+   - Dashboard → **Authentication → Users → Add user** — email must match `VITE_ADMIN_EMAIL`,
+     password is whatever staff should type, "Auto confirm user" on.
+   - Copy the user's UUID, then in the SQL editor:
+     ```sql
+     insert into public.admin_users (user_id) values ('<the-user-uuid>');
+     ```
+   - Staff can change this password themselves later from **Admin → Change password** — no
+     dashboard access needed after initial setup.
+
+5. **Configure and run the app:**
+   ```bash
+   cp .env.example .env   # fill in VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY + VITE_ADMIN_EMAIL
+   npm install
+   npm run dev
+   ```
+
+   Only the anon (public) key goes in `.env`. **Never** put the service role key in this
+   repo, the client bundle, or any `VITE_`-prefixed variable.
+
+---
+
+## Session Formats
 
 Nothing is hardcoded to a team size. Each session sets `format` (5/7/11-a-side or custom),
 `players_per_team`, and `team_count`; `max_players` is a generated column
 (`players_per_team × team_count`) that drives capacity, the waitlist, and team-balance
 warnings everywhere.
 
-## Setup
+---
 
-### 1. Create the Supabase project
-
-1. Create a project at [supabase.com](https://supabase.com) (or `supabase init && supabase start` locally).
-2. Apply the migration in `supabase/migrations/0001_init.sql`:
-   - Hosted: paste into the SQL editor, or `supabase link --project-ref <ref> && supabase db push`.
-   - Local: `supabase db reset` picks it up automatically.
-
-### 2. Disable public sign-ups
-
-Dashboard → **Authentication → Sign In / Up → disable "Allow new users to sign up"**.
-Only the single admin account you create manually should exist.
-
-Also configure **Authentication → Rate Limits** to throttle repeated failed logins
-(Supabase enforces this server-side; the app adds no client-side lockout theater).
-
-### 3. Create the shared staff account
-
-Staff sign in with a single shared password (no email prompt). Under the hood this
-still signs in to one real Supabase Auth account — that's what keeps RLS (`auth.uid()`)
-as the actual security boundary.
-
-1. Dashboard → **Authentication → Users → Add user** — email must match `VITE_ADMIN_EMAIL`
-   (see step 4), password is whatever staff should type ("Auto confirm user" on).
-2. Copy the user's UUID, then in the SQL editor:
-
-   ```sql
-   insert into public.admin_users (user_id) values ('<the-user-uuid>');
-   ```
-
-Admin policies check membership in `admin_users` via `is_admin()` — *not* merely
-`role() = 'authenticated'` — so a stray authenticated account still has no admin access.
-
-Once signed in, staff can change this password themselves from **Admin → Change password**
-(top-right of the admin header) — no dashboard access needed after initial setup.
-
-### 4. Configure and run the app
-
-```bash
-cp .env.example .env   # fill in VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY + VITE_ADMIN_EMAIL
-npm install
-npm run dev
-```
-
-Only the anon (public) key goes in `.env`. **Never** put the service role key in this repo,
-the client bundle, or any `VITE_`-prefixed variable.
-
-## Security model
+## Security Model
 
 - The anon key ships to every browser; RLS policies in `0001_init.sql` are written as if
   the React app didn't exist.
@@ -76,14 +149,14 @@ the client bundle, or any `VITE_`-prefixed variable.
 - Player rows (emails, phones) are **not** readable by anon. The public slot counter works
   off a trigger-maintained `sessions.registered_count`, so realtime never leaks player rows.
 - Registration uses the `register_player()` security-definer RPC: atomic player+payment
-  insert, duplicate-email check, capacity check with row lock, waitlist placement.
-  A unique index on `(session_id, lower(email))` backs this at the DB level.
+  insert, duplicate-email check, capacity check with row lock, waitlist placement. A unique
+  index on `(session_id, lower(email))` backs this at the DB level.
 - Postgres check constraints re-validate everything Zod checks client-side (email format,
   phone shape, amount > 0, name/notes lengths).
 - Proof-of-payment images live in the **private** `payment-proofs` bucket (5 MB,
   jpeg/png/webp enforced by bucket config). Admin views them via short-lived signed URLs.
-- Admin actions (payment status changes, team assignments) are written to `audit_log`
-  by security-definer triggers.
+- Admin actions (payment status changes, team assignments) are written to `audit_log` by
+  security-definer triggers.
 
 ### Verifying RLS from outside the app
 
@@ -113,23 +186,68 @@ curl -X PATCH "$URL/rest/v1/payments?id=eq.<payment-id>" \
 `SELECT` on players returns `[]` (no rows visible) and writes return a
 `row-level security` error — both are passes.
 
+---
+
 ## Deploy
 
 `npm run build` produces a static `dist/`. One-command deploys:
 
 ```bash
-npx vercel deploy --prod        # Vercel
+npx vercel deploy --prod            # Vercel
 npx netlify deploy --prod -d dist   # Netlify
-npx wrangler pages deploy dist  # Cloudflare Pages
+npx wrangler pages deploy dist      # Cloudflare Pages
 ```
 
 Set `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` in the host's env settings. For SPA
 routing, configure a catch-all rewrite to `/index.html` (Vercel/Netlify: add a rewrite
 rule; Cloudflare Pages does this automatically for single-page apps).
 
-## Not implemented (needs a server/edge function)
+---
 
-- Email notifications (registration confirmation, waitlist promotion). Wire a Supabase
-  Edge Function + Resend on `players` inserts/updates if wanted later.
-- Weather widget and QR check-in scanning were skipped; day-of check-in exists as a
-  toggle in the admin players table.
+## Project Structure
+
+```
+Open-Play-Manager/
+├── src/
+│   ├── pages/
+│   │   ├── public/            # Public routes: /, /session/:id
+│   │   └── admin/             # Admin routes, behind ProtectedRoute
+│   ├── components/ui/         # Local UI primitives (button, dialog, table, etc.)
+│   └── lib/
+│       ├── types.ts           # Domain types and shared enums/option lists
+│       ├── validation.ts      # Zod schemas mirroring Postgres check constraints
+│       └── supabase.ts        # Supabase client init and isSupabaseConfigured
+├── supabase/
+│   └── migrations/            # Additive, numbered SQL migrations (0001_init.sql, ...)
+├── .env.example
+└── README.md
+```
+
+---
+
+## Not Implemented
+
+- Email notifications (registration confirmation, waitlist promotion) — needs a Supabase
+  Edge Function + Resend on `players` inserts/updates.
+- Weather widget and QR check-in scanning were skipped; day-of check-in exists as a toggle
+  in the admin players table.
+
+---
+
+## License
+
+This project is open-source and available for personal use and inspiration.
+
+---
+
+## Contact
+
+**Neo Monserrat** — neo.monserrat@gmail.com
+
+Project Link: [https://github.com/Nmsrt/Open-Play-Manager](https://github.com/Nmsrt/Open-Play-Manager)
+
+---
+
+<div align="center">
+  <sub>Built with ❤️ by <a href="https://github.com/Nmsrt">Nmsrt</a></sub>
+</div>
