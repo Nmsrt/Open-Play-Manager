@@ -202,6 +202,10 @@ export default function RegistrationForm({ session, isFull, onSuccess }: Props) 
 
   async function onSubmit(values: RegistrationInput) {
     setServerError('');
+    if (values.method !== 'cash' && !proofFile) {
+      setProofError('Upload proof of payment.');
+      return;
+    }
     setSubmitting(true);
     try {
       let proofPath: string | null = null;
@@ -373,6 +377,7 @@ export default function RegistrationForm({ session, isFull, onSuccess }: Props) 
               <Input
                 id="proof"
                 type="file"
+                required
                 accept={PROOF_MIME_TYPES.join(',')}
                 className="mt-1"
                 onChange={handleProofChange}
