@@ -77,8 +77,8 @@ export default function PaymentDialog({ payment, player, onOpenChange, onChanged
                 <Badge variant={statusVariant[payment.status]}>{payment.status}</Badge>
               </p>
             </div>
-            {payment.proof_image_path &&
-              (proofUrl ? (
+            {payment.proof_image_path ? (
+              proofUrl ? (
                 <a href={proofUrl} target="_blank" rel="noreferrer">
                   <img
                     src={proofUrl}
@@ -88,7 +88,12 @@ export default function PaymentDialog({ payment, player, onOpenChange, onChanged
                 </a>
               ) : (
                 <p className="text-muted-foreground">{proofError || 'Loading proof image…'}</p>
-              ))}
+              )
+            ) : (
+              <p className="rounded-md border border-amber-200 bg-amber-50 p-2 text-amber-800">
+                No proof uploaded — cash payment. Verify collected in person before confirming.
+              </p>
+            )}
             <div className="flex justify-end gap-2 pt-2">
               <Button
                 variant="outline"
