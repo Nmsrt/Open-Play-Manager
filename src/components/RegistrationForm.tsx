@@ -159,9 +159,9 @@ function PitchPositionPicker({
 }
 
 const SKILL_OPTIONS: Array<{ value: SkillLevel; stars: string; label: string; blurb: string }> = [
-  { value: 'beginner', stars: '★', label: 'Rookie', blurb: 'Here for the fun' },
-  { value: 'intermediate', stars: '★★', label: 'Regular', blurb: 'Knows the game' },
-  { value: 'advanced', stars: '★★★', label: 'Baller', blurb: 'Carries the team' },
+  { value: 'beginner', stars: '★', label: 'Beginner', blurb: 'Here for the fun' },
+  { value: 'intermediate', stars: '★★', label: 'Intermediate', blurb: 'Knows the game' },
+  { value: 'advanced', stars: '★★★', label: 'Advanced', blurb: 'Carries the team' },
 ];
 
 export default function RegistrationForm({ session, isFull, onSuccess }: Props) {
