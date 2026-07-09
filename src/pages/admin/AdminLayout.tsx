@@ -3,6 +3,7 @@ import { LogOut } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { useAdminTheme } from '@/lib/useAdminTheme';
+import ChangePasswordDialog from './ChangePasswordDialog';
 
 export default function AdminLayout() {
   const navigate = useNavigate();
@@ -25,9 +26,12 @@ export default function AdminLayout() {
               Public site
             </Link>
           </nav>
-          <Button variant="ghost" size="sm" onClick={signOut}>
-            <LogOut className="h-4 w-4" /> Sign out
-          </Button>
+          <div className="flex items-center gap-1">
+            <ChangePasswordDialog />
+            <Button variant="ghost" size="sm" onClick={signOut}>
+              <LogOut className="h-4 w-4" /> Sign out
+            </Button>
+          </div>
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6">

@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { sessionSchema, type SessionInput } from '@/lib/validation';
 import { PLAYERS_PER_TEAM_OPTIONS, type Session, type SessionFormat } from '@/lib/types';
@@ -49,6 +50,7 @@ export default function SessionFormDialog({ open, onOpenChange, session, onSaved
   });
 
   const playersPerTeam = watch('players_per_team');
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -100,6 +102,26 @@ export default function SessionFormDialog({ open, onOpenChange, session, onSaved
     const { error } = await query;
     if (error) {
       alert(`Could not save session: ${error.message}`);
+      return;
+    }
+    onOpenChange(false);
+    onSaved();
+  }
+
+  async function onDelete() {
+    if (!session) return;
+    if (
+      !confirm(
+        `Delete "${session.title}"? This removes all players, teams, and payment records for this session. This cannot be undone.`,
+      )
+    ) {
+      return;
+    }
+    setDeleting(true);
+    const { error } = await supabase.from('sessions').delete().eq('id', session.id);
+    setDeleting(false);
+    if (error) {
+      alert(`Could not delete session: ${error.message}`);
       return;
     }
     onOpenChange(false);
@@ -187,13 +209,28 @@ export default function SessionFormDialog({ open, onOpenChange, session, onSaved
             <Label htmlFor="s-desc">Description (optional)</Label>
             <Textarea id="s-desc" className="mt-1" rows={3} {...register('description')} />
           </div>
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving…' : 'Save session'}
-            </Button>
+          <div className="flex items-center justify-between gap-2">
+            {session ? (
+              <Button
+                type="button"
+                variant="ghost"
+                className="text-destructive hover:text-destructive"
+                onClick={onDelete}
+                disabled={deleting || isSubmitting}
+              >
+                <Trash2 className="h-4 w-4" /> {deleting ? 'Deleting…' : 'Delete session'}
+              </Button>
+            ) : (
+              <span />
+            )}
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting || deleting}>
+                {isSubmitting ? 'Saving…' : 'Save session'}
+              </Button>
+            </div>
           </div>
         </form>
       </DialogContent>

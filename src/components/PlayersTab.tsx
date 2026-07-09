@@ -130,7 +130,7 @@ export default function PlayersTab({ sessionTitle, players, onChanged }: Props) 
             {filtered.map((p) => {
               const payment = p.payments[0];
               return (
-                <TableRow key={p.id}>
+                <TableRow key={p.id} className={p.checked_in_at ? 'bg-green-50 dark:bg-green-950/30' : undefined}>
                   <TableCell>
                     <p className="font-medium">{p.full_name}</p>
                     <p className="text-xs text-muted-foreground">

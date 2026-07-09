@@ -64,19 +64,21 @@ export default function TeamsManager({ sessionId, teams, teamCount, onChanged }:
       </div>
 
       {missing > 0 ? (
-        <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs text-amber-700">
-          <span>Add {missing} more — quick add:</span>
-          {BIB_SUGGESTIONS.filter((b) => !teams.some((t) => t.name === b))
-            .slice(0, missing)
-            .map((b) => (
-              <button
-                key={b}
-                onClick={() => addTeam(b, b)}
-                className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 font-medium text-amber-800 hover:bg-amber-100"
-              >
-                + {b}
-              </button>
-            ))}
+        <div className="mt-2 space-y-1.5">
+          <p className="text-xs text-muted-foreground">Add {missing} more — quick add:</p>
+          <div className="flex flex-wrap gap-1.5">
+            {BIB_SUGGESTIONS.filter((b) => !teams.some((t) => t.name === b))
+              .slice(0, missing)
+              .map((b) => (
+                <button
+                  key={b}
+                  onClick={() => addTeam(b, b)}
+                  className="rounded-full border border-border bg-muted/50 px-2.5 py-1 text-xs font-medium text-foreground hover:bg-muted"
+                >
+                  + {b}
+                </button>
+              ))}
+          </div>
         </div>
       ) : (
         <p className="mt-2 text-xs text-muted-foreground">

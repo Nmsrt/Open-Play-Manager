@@ -78,12 +78,7 @@ export default function PrintRoster() {
                   {members.map((m, i) => (
                     <tr key={m.id} className="border-b border-border">
                       <td className="w-6 py-1 text-muted-foreground">{i + 1}.</td>
-                      <td className="py-1 font-medium">
-                        {m.players.full_name}
-                        {m.jersey_number != null && (
-                          <span className="ml-1 text-muted-foreground">#{m.jersey_number}</span>
-                        )}
-                      </td>
+                      <td className="py-1 font-medium">{m.players.full_name}</td>
                       <td className="w-12 py-1 text-right text-muted-foreground">
                         {m.players.preferred_position}
                       </td>

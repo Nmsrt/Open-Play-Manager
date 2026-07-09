@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Pencil } from 'lucide-react';
+import { Plus, Pencil, FlaskConical } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { Session, SessionStatus } from '@/lib/types';
 import { cn, formatDateParts } from '@/lib/utils';
@@ -22,6 +22,47 @@ const statusVariant: Record<SessionStatus, 'secondary' | 'success' | 'warning' |
   closed: 'warning',
   completed: 'outline',
 };
+
+// Dev-only fixture: famous players, grouped by club so paired names get a
+// squad-request (teammate_requests) icon in PlayersTab. Not shown in prod.
+const DEMO_PLAYERS: {
+  name: string;
+  position: 'GK' | 'DEF' | 'MID' | 'FWD' | 'ANY';
+  club: string;
+  requests?: string;
+}[] = [
+  { name: 'Lionel Messi', position: 'FWD', club: 'Inter Miami', requests: 'Luis Suárez' },
+  { name: 'Luis Suárez', position: 'FWD', club: 'Inter Miami', requests: 'Lionel Messi' },
+  { name: 'Kevin De Bruyne', position: 'MID', club: 'Man City', requests: 'Erling Haaland' },
+  { name: 'Erling Haaland', position: 'FWD', club: 'Man City', requests: 'Kevin De Bruyne' },
+  { name: 'Kylian Mbappé', position: 'FWD', club: 'Real Madrid', requests: 'Vinícius Júnior, Luka Modrić' },
+  { name: 'Vinícius Júnior', position: 'FWD', club: 'Real Madrid', requests: 'Kylian Mbappé, Luka Modrić' },
+  { name: 'Mohamed Salah', position: 'FWD', club: 'Liverpool', requests: 'Virgil van Dijk' },
+  { name: 'Virgil van Dijk', position: 'DEF', club: 'Liverpool', requests: 'Mohamed Salah' },
+  { name: 'Cristiano Ronaldo', position: 'FWD', club: 'Al Nassr' },
+  { name: 'Neymar Jr', position: 'FWD', club: 'Al Hilal' },
+  { name: 'Robert Lewandowski', position: 'FWD', club: 'Barcelona' },
+  { name: 'Thibaut Courtois', position: 'GK', club: 'Real Madrid' },
+  { name: 'Manuel Neuer', position: 'GK', club: 'Bayern Munich' },
+  { name: 'Sergio Ramos', position: 'DEF', club: 'Sevilla' },
+  { name: 'Luka Modrić', position: 'MID', club: 'Real Madrid', requests: 'Kylian Mbappé, Vinícius Júnior' },
+  { name: "N'Golo Kanté", position: 'MID', club: 'Al-Ittihad' },
+  { name: 'Harry Kane', position: 'FWD', club: 'Bayern Munich', requests: 'Jamal Musiala' },
+  { name: 'Jamal Musiala', position: 'MID', club: 'Bayern Munich', requests: 'Harry Kane' },
+  { name: 'Bukayo Saka', position: 'FWD', club: 'Arsenal' },
+  { name: 'Martin Ødegaard', position: 'MID', club: 'Arsenal' },
+  { name: 'Alisson Becker', position: 'GK', club: 'Liverpool' },
+  { name: 'Rodri', position: 'MID', club: 'Man City' },
+  { name: 'Achraf Hakimi', position: 'DEF', club: 'PSG' },
+  { name: 'Ousmane Dembélé', position: 'FWD', club: 'PSG' },
+];
+
+function nextEightPm(): Date {
+  const d = new Date();
+  d.setHours(20, 0, 0, 0);
+  if (d.getTime() <= Date.now()) d.setDate(d.getDate() + 1);
+  return d;
+}
 
 const nextActions: Record<SessionStatus, { label: string; to: SessionStatus }[]> = {
   draft: [{ label: 'Open registration', to: 'open' }],
@@ -56,6 +97,44 @@ export default function AdminSessions() {
     load();
   }
 
+  async function generateDemoSession() {
+    const { data: session, error: sessionError } = await supabase
+      .from('sessions')
+      .insert({
+        title: 'Parqal',
+        description: '8:00 PM – 10:00 PM',
+        date: nextEightPm().toISOString(),
+        location: 'Parqal',
+        format: 'custom',
+        players_per_team: 8,
+        team_count: 3,
+        status: 'open',
+      })
+      .select()
+      .single();
+    if (sessionError || !session) {
+      alert(`Could not create demo session: ${sessionError?.message}`);
+      return;
+    }
+
+    const { error: playersError } = await supabase.from('players').insert(
+      DEMO_PLAYERS.map((p) => ({
+        session_id: session.id,
+        full_name: p.name,
+        email: `${p.name.toLowerCase().replace(/[^a-z]+/g, '.')}@demo.parqal`,
+        preferred_position: p.position,
+        skill_level: 'advanced',
+        notes: p.club,
+        teammate_requests: p.requests ?? null,
+      })),
+    );
+    if (playersError) {
+      alert(`Session created, but could not add demo players: ${playersError.message}`);
+    }
+    load();
+    navigate(`/admin/session/${session.id}`);
+  }
+
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
@@ -63,14 +142,21 @@ export default function AdminSessions() {
           <span className="rule mb-2" />
           <h1 className="headline text-3xl">Sessions</h1>
         </div>
-        <Button
-          onClick={() => {
-            setEditing(null);
-            setDialogOpen(true);
-          }}
-        >
-          <Plus className="h-4 w-4" /> New session
-        </Button>
+        <div className="flex gap-2">
+          {import.meta.env.DEV && (
+            <Button variant="outline" onClick={generateDemoSession} title="Dev only: seeds a full demo session">
+              <FlaskConical className="h-4 w-4" /> Generate test session
+            </Button>
+          )}
+          <Button
+            onClick={() => {
+              setEditing(null);
+              setDialogOpen(true);
+            }}
+          >
+            <Plus className="h-4 w-4" /> New session
+          </Button>
+        </div>
       </div>
 
       {loading ? (

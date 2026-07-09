@@ -35,10 +35,14 @@ Only the single admin account you create manually should exist.
 Also configure **Authentication → Rate Limits** to throttle repeated failed logins
 (Supabase enforces this server-side; the app adds no client-side lockout theater).
 
-### 3. Create the admin account
+### 3. Create the shared staff account
 
-1. Dashboard → **Authentication → Users → Add user** — create the admin with email + password
-   ("Auto confirm user" on).
+Staff sign in with a single shared password (no email prompt). Under the hood this
+still signs in to one real Supabase Auth account — that's what keeps RLS (`auth.uid()`)
+as the actual security boundary.
+
+1. Dashboard → **Authentication → Users → Add user** — email must match `VITE_ADMIN_EMAIL`
+   (see step 4), password is whatever staff should type ("Auto confirm user" on).
 2. Copy the user's UUID, then in the SQL editor:
 
    ```sql
@@ -48,10 +52,13 @@ Also configure **Authentication → Rate Limits** to throttle repeated failed lo
 Admin policies check membership in `admin_users` via `is_admin()` — *not* merely
 `role() = 'authenticated'` — so a stray authenticated account still has no admin access.
 
+Once signed in, staff can change this password themselves from **Admin → Change password**
+(top-right of the admin header) — no dashboard access needed after initial setup.
+
 ### 4. Configure and run the app
 
 ```bash
-cp .env.example .env   # fill in VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY
+cp .env.example .env   # fill in VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY + VITE_ADMIN_EMAIL
 npm install
 npm run dev
 ```

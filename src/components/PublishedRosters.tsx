@@ -87,14 +87,7 @@ export default function PublishedRosters({
                 {members
                   .slice()
                   .sort((a, b) => a.full_name.localeCompare(b.full_name))
-                  .map((m, i) => (
-                    <li key={i} className="flex justify-between">
-                      <span>{m.full_name}</span>
-                      {m.jersey_number != null && (
-                        <span className="text-muted-foreground">#{m.jersey_number}</span>
-                      )}
-                    </li>
-                  ))}
+                  .map((m, i) => <li key={i}>{m.full_name}</li>)}
               </ul>
             </CardContent>
           </Card>

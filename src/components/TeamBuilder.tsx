@@ -53,6 +53,40 @@ function buildTeammateLinks(players: Player[]): Map<string, Set<string>> {
   return links;
 }
 
+// Groups pool players into connected squad-request clusters (size 2+) via
+// buildTeammateLinks, restricted to players still in the pool — a player
+// linked only to someone already placed is left as a singleton, since that
+// case is already handled by the per-player link bonus in shuffleEvenly.
+// Placing a whole cluster on one team atomically (instead of one player at
+// a time) means a trio+ can't get split just because the first two members
+// happened to land on a team that then loses out to another on later ties.
+function buildTeammateClusters(pool: Player[], links: Map<string, Set<string>>): Player[][] {
+  const poolIds = new Set(pool.map((p) => p.id));
+  const byId = new Map(pool.map((p) => [p.id, p]));
+  const seen = new Set<string>();
+  const clusters: Player[][] = [];
+  for (const p of pool) {
+    if (seen.has(p.id)) continue;
+    const neighbors = links.get(p.id);
+    if (!neighbors || ![...neighbors].some((id) => poolIds.has(id))) continue;
+    const stack = [p.id];
+    const cluster: Player[] = [];
+    seen.add(p.id);
+    while (stack.length > 0) {
+      const id = stack.pop()!;
+      cluster.push(byId.get(id)!);
+      for (const neighborId of links.get(id) ?? []) {
+        if (poolIds.has(neighborId) && !seen.has(neighborId)) {
+          seen.add(neighborId);
+          stack.push(neighborId);
+        }
+      }
+    }
+    clusters.push(cluster);
+  }
+  return clusters;
+}
+
 // Penalize stacking the same position onto one team — hard-ish for
 // goalkeepers (rarely want two), softer for outfield positions.
 function positionPenalty(player: Player, teamMembers: Player[]): number {
@@ -73,13 +107,9 @@ interface Props {
 function PlayerCard({
   player,
   source,
-  jersey,
-  onJersey,
 }: {
   player: Player;
   source?: 'admin' | 'self';
-  jersey: number | null;
-  onJersey: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: player.id,
@@ -114,22 +144,6 @@ function PlayerCard({
           self
         </Badge>
       )}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onJersey();
-        }}
-        onPointerDown={(e) => e.stopPropagation()}
-        className={cn(
-          'flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-xs font-bold transition-colors',
-          jersey != null
-            ? 'headline bg-foreground text-white shadow-sm'
-            : 'border border-dashed border-border text-muted-foreground hover:border-primary/50 hover:text-primary',
-        )}
-        title="Set jersey number"
-      >
-        {jersey != null ? jersey : '#'}
-      </button>
     </div>
   );
 }
@@ -244,7 +258,6 @@ function Column({
 export default function TeamBuilder({ session, teams, players, assignments, onSaved }: Props) {
   const [placement, setPlacement] = useState<Placement>({});
   const [source, setSource] = useState<Source>({});
-  const [jerseys, setJerseys] = useState<Record<string, number | null>>({});
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -256,21 +269,17 @@ export default function TeamBuilder({ session, teams, players, assignments, onSa
   useEffect(() => {
     const p: Placement = {};
     const s: Source = {};
-    const j: Record<string, number | null> = {};
     for (const player of players) {
       p[player.id] = null;
-      j[player.id] = null;
     }
     for (const a of assignments) {
       if (p[a.player_id] !== undefined) {
         p[a.player_id] = a.team_id;
         s[a.player_id] = a.assigned_by;
-        j[a.player_id] = a.jersey_number;
       }
     }
     setPlacement(p);
     setSource(s);
-    setJerseys(j);
     setDirty(false);
   }, [players, assignments]);
 
@@ -322,9 +331,40 @@ export default function TeamBuilder({ session, teams, players, assignments, onSa
     const globalAvgSkill =
       players.reduce((sum, p) => sum + skillValue(p.skill_level), 0) / Math.max(1, players.length);
 
-    // Seat players with the most squad-request connections first so their
-    // requested teammates still have room; GK/position/skill break ties.
-    const ordered = [...pool].sort((a, b) => {
+    // Seat whole squad-request clusters (2+ linked players) together first,
+    // as a unit, before falling back to the per-player pass below.
+    const clusters = buildTeammateClusters(pool, links);
+    for (const cluster of clusters.sort((a, b) => b.length - a.length)) {
+      let bestTeamId = teams[0].id;
+      let bestScore = -Infinity;
+      for (const t of teams) {
+        const members = loads.get(t.id)!;
+        let score = -members.length * 50;
+        for (const player of cluster) {
+          const skillSum = members.reduce((sum, m) => sum + skillValue(m.skill_level), 0);
+          const projectedAvg = (skillSum + skillValue(player.skill_level)) / (members.length + 1);
+          score -= Math.abs(projectedAvg - globalAvgSkill) * 40;
+          score -= positionPenalty(player, members);
+        }
+        const overflow = Math.max(0, members.length + cluster.length - session.players_per_team);
+        score -= overflow * 300;
+        if (score > bestScore) {
+          bestScore = score;
+          bestTeamId = t.id;
+        }
+      }
+      const members = loads.get(bestTeamId)!;
+      for (const player of cluster) {
+        next[player.id] = bestTeamId;
+        nextSource[player.id] = 'admin';
+        members.push(player);
+      }
+    }
+
+    // Seat remaining players with the most squad-request connections first so
+    // their requested teammates still have room; GK/position/skill break ties.
+    const clusteredIds = new Set(clusters.flat().map((p) => p.id));
+    const ordered = [...pool.filter((p) => !clusteredIds.has(p.id))].sort((a, b) => {
       const linkDiff = (links.get(b.id)?.size ?? 0) - (links.get(a.id)?.size ?? 0);
       if (linkDiff !== 0) return linkDiff;
       const posDiff = POSITION_ORDER.indexOf(a.preferred_position) - POSITION_ORDER.indexOf(b.preferred_position);
@@ -359,24 +399,6 @@ export default function TeamBuilder({ session, teams, players, assignments, onSa
     setDirty(true);
   }
 
-  function editJersey(player: Player) {
-    const current = jerseys[player.id];
-    const raw = window.prompt(`Jersey number for ${player.full_name} (blank to clear):`, current != null ? String(current) : '');
-    if (raw === null) return;
-    const trimmed = raw.trim();
-    if (trimmed === '') {
-      setJerseys((j) => ({ ...j, [player.id]: null }));
-    } else {
-      const n = Number(trimmed);
-      if (!Number.isInteger(n) || n < 1 || n > 99) {
-        alert('Jersey number must be 1–99.');
-        return;
-      }
-      setJerseys((j) => ({ ...j, [player.id]: n }));
-    }
-    setDirty(true);
-  }
-
   async function save() {
     setSaving(true);
     const assigned = players.filter((p) => placement[p.id]);
@@ -386,7 +408,6 @@ export default function TeamBuilder({ session, teams, players, assignments, onSa
       player_id: p.id,
       team_id: placement[p.id]!,
       assigned_by: source[p.id] ?? 'admin',
-      jersey_number: jerseys[p.id] ?? null,
     }));
 
     let error = null;
@@ -482,7 +503,7 @@ export default function TeamBuilder({ session, teams, players, assignments, onSa
             count={(byTeam.get(null) ?? []).length}
           >
             {(byTeam.get(null) ?? []).map((p) => (
-              <PlayerCard key={p.id} player={p} jersey={jerseys[p.id] ?? null} onJersey={() => editJersey(p)} />
+              <PlayerCard key={p.id} player={p} />
             ))}
           </Column>
           {teams.map((t) => {
@@ -509,13 +530,7 @@ export default function TeamBuilder({ session, teams, players, assignments, onSa
                 }
               >
                 {members.map((p) => (
-                  <PlayerCard
-                    key={p.id}
-                    player={p}
-                    source={source[p.id]}
-                    jersey={jerseys[p.id] ?? null}
-                    onJersey={() => editJersey(p)}
-                  />
+                  <PlayerCard key={p.id} player={p} source={source[p.id]} />
                 ))}
               </Column>
             );
